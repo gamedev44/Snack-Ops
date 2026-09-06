@@ -53,3 +53,4 @@ Session.vim
 # Exceptions for Launchers on Windows
 !SnackOps_Banner.txt
 !SnackOps_Launcher.bat
+!README.md
