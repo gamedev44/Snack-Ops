@@ -1,0 +1,47 @@
+# Tracked: Config/, Content/, Build/, SnackOps_SDK.uproject, launcher docs.
+# Not tracked: generated caches, binaries, tester package, archives.
+
+# --- Unreal: generated / local ---
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Tester-only packaged build — local only
+Snack Ops v2 Windows/
+
+# Executables and installers
+*.exe
+*.app
+*.dmg
+
+# Archives
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+*.bz2
+*.xz
+*.pak
+
+# Build/ is intentionally tracked
+
+# Visual Studio / Rider / VS Code
+.vs/
+.vscode/
+.idea/
+*.sln
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Crash dumps
+*.dmp
