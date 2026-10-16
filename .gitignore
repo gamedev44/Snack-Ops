@@ -1,0 +1,17 @@
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+.vs/
+.vscode/
+.idea/
+*.sln
+*.suo
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.dmp
+*.zip
+*.7z
+*.rar
+*.exe
