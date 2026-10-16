@@ -1,56 +1,47 @@
-# Ignore all files by default, but scan all directories.
-*
-!*/
+# Tracked: Config/, Content/, Build/, SnackOps_SDK.uproject, launcher docs.
+# Not tracked: generated caches, binaries, tester package, archives.
 
-# Do not ignore git files in the root of the repo.
-!/.git*
+# --- Unreal: generated / local ---
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
 
-# Do not ignore current project's `.uproject`.
-!/*.uproject
+# Tester-only packaged build — local only
+Snack Ops v2 Windows/
 
-# Do not ignore source, config and plugins dirs.
-!/Source/**
-!/Config/**
-!/Plugins/**
+# Executables and installers
+*.exe
+*.app
+*.dmg
 
-# Only allow .uasset and .umap files from /Content dir.
-# They're tracked by git-lfs, don't forget to track other
-# files if adding them here.
-!/Content/**/*.uasset
-!/Content/**/*.umap
+# Archives
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+*.bz2
+*.xz
+*.pak
 
-# Allow any files from /RawContent dir.
-# Any file in /RawContent dir will be managed by git lfs.
-!/RawContent/**/*
+# Build/ is intentionally tracked
 
-# OS/platform generated files.
+# Visual Studio / Rider / VS Code
+.vs/
+.vscode/
+.idea/
+*.sln
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
 
-# Windows
-ehthumbs.db
-Thumbs.db
-
-# Mac OS X
+# OS
 .DS_Store
-.DS_Store?
-.AppleDouble
-.LSOverride
-._*
+Thumbs.db
+Desktop.ini
 
-# Linux
-*~
-.directory
-
-# vim
-[._]*.s[a-w][a-z]
-[._]s[a-w][a-z]
-*.un~
-Session.vim
-.netrwhist
-
-# Visual Studio
-.vs
-
-# Exceptions for Launchers on Windows
-!SnackOps_Banner.txt
-!SnackOps_Launcher.bat
-!README.md
+# Crash dumps
+*.dmp
