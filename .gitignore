@@ -45,3 +45,6 @@ Desktop.ini
 
 # Crash dumps
 *.dmp
+
+# Local Fab update backups
+_fab_update_preserve/
