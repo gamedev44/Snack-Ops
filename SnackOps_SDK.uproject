@@ -34,7 +34,7 @@
 		},
 		{
 			"Name": "Bridge",
-			"Enabled": true
+			"Enabled": false
 		},
 		{
 			"Name": "RigLogic",
