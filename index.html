@@ -649,7 +649,7 @@
       <ul id="nav-links">
         <li><a href="#prior-week">Prior week · Engine (collapsed)</a></li>
         <li><a href="#this-week">This week — Oct 2026</a></li>
-        <li><a href="#ugc-launcher">Launcher · UGC &amp; AK-47</a></li>
+        <li><a href="#ugc-launcher">Snack Ops HQ Launcher</a></li>
         <li><a href="#hud">HUD · Death quotes</a></li>
         <li><a href="#crosshair">Crosshair FP/TP</a></li>
         <li><a href="#systems">Ladders · zones · UI</a></li>
@@ -741,12 +741,14 @@ PendingDestroyPhysicsProxy.Add();</code></pre>
       <p class="week-banner block visible" id="this-week">This week — October 2026</p>
 
       <section class="block visible" id="ugc-launcher">
-        <h3><span class="tag">Launcher</span> UGC pipeline &amp; AK-47</h3>
+        <h3><span class="tag">Launcher</span> Snack Ops HQ &amp; UGC</h3>
+        <p>We ship a dedicated <strong>Snack Ops HQ Launcher</strong> (Electron) for this SDK — play/test builds, DEVELOP (clone this repo with Git LFS, open Unreal), standard mod packs, and bundled UGC with an in-app <strong>Gun Import Guide</strong>.</p>
+        <p><strong>Launcher repository:</strong> <a href="https://github.com/gamedev44/SnackOpsHQLauncher" rel="noopener">github.com/gamedev44/SnackOpsHQLauncher</a></p>
         <ul class="clean">
-          <li><strong>AK-47 kept</strong> — live gun content under <code>Content/FPSK/Guns/AK47</code> (Fab / manual import per launcher <strong>Gun Import Guide</strong>). <code>ExternalAssets/AK47</code> remains for presets and animation references.</li>
+          <li><strong>SDK repository (this project):</strong> <a href="https://github.com/gamedev44/Snack-Ops" rel="noopener">github.com/gamedev44/Snack-Ops</a></li>
+          <li><strong>AK-47 kept</strong> — live gun content under <code>Content/FPSK/Guns/AK47</code> (Fab / manual import per Gun Import Guide). <code>ExternalAssets/AK47</code> remains for presets and animation references.</li>
           <li><strong>UGC install (Oct 19)</strong> — launcher copies bundled packs to <code>Content/&lt;pack&gt;/</code> only. No automatic <code>UGC_Incoming</code> staging, editor full-load gate, promote, or Python fixup on install.</li>
-          <li>Authors finish guns in-editor: promote into <code>FPSK/Guns</code>, assign skeletons, fix material paths — documented in launcher UGC tab + roadmap notes.</li>
-          <li>Canonical SDK repo: <code>gamedev44/Snack-Ops</code> · HQ launcher pushed; Play launcher commit local until remote is restored.</li>
+          <li>Authors finish guns in-editor: promote into <code>FPSK/Guns</code>, assign skeletons, fix material paths — documented in the launcher UGC tab + roadmap notes.</li>
         </ul>
       </section>
 
