@@ -10,6 +10,7 @@ Snack Ops combines classic Call of Duty-inspired gameplay with a modern Unreal E
 > 🚀 **Primary Development Version:** Unreal Engine 5.8
 > 🔄 **Legacy / Compatibility Version:** Unreal Engine 5.3
 > 🆕 **Latest Major Feature:** Death From Above
+> 📰 **Dev changelog (GitHub Pages):** [index.html](./index.html) — set repo Pages source to **main / root** for the public update log.
 
 ---
 
