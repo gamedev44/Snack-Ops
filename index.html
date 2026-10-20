@@ -134,9 +134,9 @@
       position: fixed;
       left: 0;
       top: 0;
-      width: 44px;
-      height: 44px;
-      margin: -22px 0 0 -22px;
+      width: 132px;
+      height: 132px;
+      margin: -66px 0 0 -66px;
       z-index: 50;
       pointer-events: none;
       opacity: 0;
@@ -145,19 +145,36 @@
     .reticle::before, .reticle::after {
       content: "";
       position: absolute;
-      background: var(--yellow);
-      box-shadow: 0 0 8px rgba(251, 242, 54, 0.6);
+      background: #ffffff;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.55);
     }
     .reticle::before { left: 50%; top: 0; width: 2px; height: 100%; transform: translateX(-50%); }
     .reticle::after { top: 50%; left: 0; height: 2px; width: 100%; transform: translateY(-50%); }
     .reticle i {
       position: absolute;
-      inset: 12px;
-      border: 1px solid var(--yellow);
+      inset: 36px;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
       border-radius: 50%;
       opacity: 0.7;
     }
     body.has-pointer .reticle { opacity: 0.9; }
+    body.crosshair-only, body.crosshair-only * { cursor: none !important; }
+    .cursor-toggle {
+      font-family: var(--body);
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 0.5rem 0.9rem;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .cursor-toggle:hover { border-color: #ffffff; color: #ffffff; }
+    .cursor-toggle[hidden] { display: none; }
     @media (hover: none) { .reticle { display: none; } }
 
     /* ---------- Page shell ---------- */
@@ -204,7 +221,7 @@
       height: 72px;
       gap: 1rem;
     }
-    .brand img { height: 56px; width: auto; }
+    .brand img { height: 96px; width: auto; margin: -14px 0; }
     nav.links { display: flex; gap: 1.6rem; }
     nav.links a {
       text-decoration: none;
@@ -1178,6 +1195,7 @@
         <a href="#features">Features</a>
         <a href="#arsenal">Arsenal</a>
         <a href="#dev-updates">Dev updates</a>
+        <button type="button" class="cursor-toggle" id="cursor-toggle" aria-pressed="true" hidden>Crosshair cursor: on</button>
         <a target="_blank" class="btn-small" href="https://github.com/gamedev44/Snack-Ops" rel="noopener noreferrer">Source</a>
       </nav>
     </div>
@@ -1355,7 +1373,7 @@
           <h2>What's new this week.</h2>
           <p class="section-lead">Full changelog, weapon breakdowns, known issues, and the coming-next roadmap live on the dev updates page.</p>
           <div class="cta-row" style="margin-top:1.6rem">
-            <a class="btn btn-primary" href="#dev-updates">Open dev updates</a>
+            <a class="btn btn-primary" href="#dev-updates">View full changelog</a>
           </div>
         </div>
         <ul>
@@ -1851,6 +1869,28 @@ PendingDestroyPhysicsProxy.Add();</code></pre>
       document.body.classList.add("has-pointer");
       reticle.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
     }, { passive: true });
+
+    // ---------- Crosshair cursor toggle ----------
+    (function () {
+      const btn = document.getElementById("cursor-toggle");
+      if (!btn) return;
+      const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+      if (!finePointer) return;
+      btn.hidden = false;
+      let crosshairOnly = true;
+      try {
+        const saved = localStorage.getItem("snackops-cursor");
+        if (saved !== null) crosshairOnly = saved === "crosshair";
+      } catch (e) {}
+      function apply() {
+        document.body.classList.toggle("crosshair-only", crosshairOnly);
+        btn.setAttribute("aria-pressed", String(crosshairOnly));
+        btn.textContent = crosshairOnly ? "Crosshair cursor: on" : "Crosshair cursor: off";
+        try { localStorage.setItem("snackops-cursor", crosshairOnly ? "crosshair" : "system"); } catch (e) {}
+      }
+      btn.addEventListener("click", () => { crosshairOnly = !crosshairOnly; apply(); });
+      apply();
+    })();
 
     // ---------- Ember / particle field ----------
     (function () {
