@@ -4,1488 +4,923 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
-  <title>Snack Ops — Dev Updates</title>
+  <meta name="description" content="Snack Ops 2 — a fan-made tactical shooter SDK built in Unreal Engine 5.8. Inspired by Black Ops 2, NX1 Future Warfare, and Modern Warfare 3 (2011)." />
+  <title>Snack Ops 2 — Launch</title>
+  <link rel="icon" href="assets/img/app-icon.png" />
   <style>
     @font-face {
       font-family: "Black Ops 2";
       src: url("Docs/fonts/BlackOps2.ttf") format("truetype");
-      font-weight: normal;
-      font-style: normal;
       font-display: swap;
-    }
-    @property --accent-h {
-      syntax: "<angle>";
-      inherits: false;
-      initial-value: 32deg;
     }
     :root {
       --bg: #040506;
-      --surface: rgba(8, 10, 14, 0.78);
-      --surface-solid: #0a0c10;
-      --border: rgba(251, 242, 54, 0.16);
-      --border-strong: rgba(224, 113, 38, 0.45);
+      --bg-2: #0a0c10;
       --text: #ece8e4;
       --muted: #9a9590;
-      --accent: #fbf236;
-      --accent-warm: #e07126;
-      --accent-red: #ac3232;
-      --accent-blue: #1c6fd4;
-      --accent-blue-deep: #0a2d5c;
-      --accent-dim: #b85a1a;
-      --danger: #ff5c5c;
-      --ok: #3dd68c;
-      --mono: "Segoe UI", system-ui, sans-serif;
-      --display: "Black Ops 2", Impact, sans-serif;
-      --radius: 14px;
-      --shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
-      --accent-h: 32deg;
+      --yellow: #fbf236;
+      --orange: #e07126;
+      --orange-dim: #b85a1a;
+      --red: #ac3232;
+      --blue: #1c6fd4;
+      --line: rgba(251, 242, 54, 0.16);
+      --line-strong: rgba(224, 113, 38, 0.45);
+      --display: "Black Ops 2", Impact, "Arial Black", sans-serif;
+      --body: "Segoe UI", system-ui, -apple-system, sans-serif;
+      --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
     }
     *, *::before, *::after { box-sizing: border-box; }
-    html {
-      scroll-behavior: smooth;
-      scrollbar-width: thin;
-      scrollbar-color: var(--accent-dim) var(--bg);
-    }
+    html { scroll-behavior: smooth; background: var(--bg); }
     body {
       margin: 0;
-      font-family: var(--mono);
-      font-size: 1.05rem;
-      line-height: 1.65;
+      font-family: var(--body);
       color: var(--text);
       background: var(--bg);
+      line-height: 1.6;
       overflow-x: hidden;
     }
-    body::before {
-      content: "";
+    a { color: inherit; }
+    img { max-width: 100%; display: block; }
+    button { font: inherit; }
+
+    /* ---------- Intro loader (cinematic) ---------- */
+    #intro {
       position: fixed;
       inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      background:
-        radial-gradient(ellipse 55% 70% at 12% 45%, rgba(28, 111, 212, 0.22), transparent 55%),
-        radial-gradient(ellipse 50% 65% at 88% 40%, rgba(224, 113, 38, 0.2), transparent 55%),
-        linear-gradient(180deg, #040506 0%, #0a0c10 100%);
+      z-index: 999;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.9s var(--ease), visibility 0.9s;
     }
-    #webgl {
+    #intro.done { opacity: 0; visibility: hidden; pointer-events: none; }
+    #intro video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #000;
+    }
+    #intro::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.75) 100%);
+      pointer-events: none;
+    }
+    .intro-ui {
+      position: absolute;
+      z-index: 2;
+      right: 1.5rem;
+      bottom: 1.5rem;
+      display: flex;
+      gap: 0.6rem;
+    }
+    .intro-ui button {
+      font-family: var(--body);
+      font-size: 0.8rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 0.6rem 1rem;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      background: rgba(0, 0, 0, 0.55);
+      color: var(--text);
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .intro-ui button:hover { border-color: var(--yellow); color: var(--yellow); }
+    .intro-title {
+      position: absolute;
+      z-index: 2;
+      left: 1.5rem;
+      bottom: 1.5rem;
+      font-family: var(--display);
+      font-size: 0.85rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--yellow);
+      text-shadow: 0 0 18px rgba(251, 242, 54, 0.35);
+    }
+
+    /* ---------- Background FX ---------- */
+    #fx {
       position: fixed;
       inset: 0;
+      width: 100%;
+      height: 100%;
       z-index: 0;
       pointer-events: none;
+    }
+    .vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: radial-gradient(ellipse 90% 70% at 50% 35%, transparent 0%, rgba(4,5,6,0.9) 100%);
     }
     .grain {
       position: fixed;
       inset: 0;
       z-index: 1;
       pointer-events: none;
-      opacity: 0.045;
+      opacity: 0.05;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
-    .vignette {
+    .reticle {
       position: fixed;
-      inset: 0;
-      z-index: 2;
+      left: 0;
+      top: 0;
+      width: 44px;
+      height: 44px;
+      margin: -22px 0 0 -22px;
+      z-index: 50;
       pointer-events: none;
-      background: radial-gradient(ellipse 80% 60% at 50% 40%, transparent 0%, rgba(7, 8, 9, 0.85) 100%);
+      opacity: 0;
+      transition: opacity 0.3s;
     }
-    .layout {
+    .reticle::before, .reticle::after {
+      content: "";
+      position: absolute;
+      background: var(--yellow);
+      box-shadow: 0 0 8px rgba(251, 242, 54, 0.6);
+    }
+    .reticle::before { left: 50%; top: 0; width: 2px; height: 100%; transform: translateX(-50%); }
+    .reticle::after { top: 50%; left: 0; height: 2px; width: 100%; transform: translateY(-50%); }
+    .reticle i {
+      position: absolute;
+      inset: 12px;
+      border: 1px solid var(--yellow);
+      border-radius: 50%;
+      opacity: 0.7;
+    }
+    body.has-pointer .reticle { opacity: 0.9; }
+    @media (hover: none) { .reticle { display: none; } }
+
+    /* ---------- Page shell ---------- */
+    .wrap {
       position: relative;
       z-index: 3;
-      display: grid;
-      grid-template-columns: minmax(220px, 260px) 1fr;
-      gap: 2rem;
-      max-width: 1280px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 2rem 1.5rem 4rem;
+      padding: 0 1.5rem;
     }
-    @media (max-width: 960px) {
-      .layout { grid-template-columns: 1fr; }
-      nav.side { position: relative !important; top: 0 !important; }
-    }
-    nav.side {
-      position: sticky;
-      top: 1.5rem;
-      align-self: start;
-      padding: 1.25rem;
-      border-radius: var(--radius);
-      background: var(--surface);
-      backdrop-filter: blur(40px) saturate(1.15);
-      -webkit-backdrop-filter: blur(40px) saturate(1.15);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-    }
-    nav.side .logo-wrap {
-      margin-bottom: 1rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--border);
-    }
-    nav.side .logo-wrap img {
-      display: block;
-      width: 100%;
-      max-width: 220px;
-      height: auto;
-      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.6));
-    }
-    nav.side h1 {
+    section { position: relative; z-index: 3; padding: 6rem 0; }
+    .eyebrow {
       font-family: var(--display);
-      font-size: 1.05rem;
-      font-weight: normal;
-      letter-spacing: 0.06em;
-      margin: 0.65rem 0 1rem;
-      line-height: 1.25;
-      color: var(--accent);
-      text-transform: uppercase;
-    }
-    nav.side ul {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-    nav.side a {
-      display: block;
-      padding: 0.45rem 0.65rem;
-      margin: 0.15rem 0;
-      border-radius: 8px;
-      color: var(--muted);
-      text-decoration: none;
-      font-size: 0.88rem;
-      font-weight: 600;
-      transition: color 0.2s, background 0.2s, transform 0.2s;
-    }
-    nav.side a:hover, nav.side a.active {
-      color: var(--text);
-      background: rgba(255, 176, 32, 0.08);
-    }
-    nav.side a.active { border-left: 2px solid var(--accent); }
-    .meta-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--border);
-    }
-    .pill {
-      font-family: var(--mono);
-      font-size: 0.68rem;
-      padding: 0.35rem 0.6rem;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      color: var(--muted);
-    }
-    main { min-width: 0; }
-    .hero {
-      padding: 2.5rem 2rem;
-      margin-bottom: 2rem;
-      border-radius: calc(var(--radius) + 4px);
-      background: linear-gradient(135deg, rgba(255, 176, 32, 0.07), transparent 50%),
-        var(--surface);
-      backdrop-filter: blur(44px) saturate(1.1);
-      -webkit-backdrop-filter: blur(44px) saturate(1.1);
-      border: 1px solid var(--border-strong);
-      box-shadow: var(--shadow);
-      position: relative;
-      overflow: hidden;
-    }
-    .hero::before {
-      content: "";
-      position: absolute;
-      top: -50%;
-      right: -20%;
-      width: 60%;
-      height: 200%;
-      background: conic-gradient(from var(--accent-h), transparent, rgba(224, 113, 38, 0.14), transparent 40%, rgba(28, 111, 212, 0.1), transparent);
-      animation: spinGlow 12s linear infinite;
-      pointer-events: none;
-    }
-    @keyframes spinGlow { to { --accent-h: 392deg; } }
-    @media (prefers-reduced-motion: reduce) {
-      .hero::before { animation: none; }
-    }
-    .hero h2 {
-      font-family: var(--display);
-      font-size: clamp(1.65rem, 4vw, 2.35rem);
-      font-weight: normal;
-      margin: 0 0 0.5rem;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      position: relative;
-      color: var(--accent);
-      text-shadow: 0 0 40px rgba(251, 242, 54, 0.15);
-    }
-    .hero p.lead {
-      margin: 0;
-      color: var(--muted);
-      max-width: 52ch;
-      position: relative;
-    }
-    .crosshair-deco {
-      position: absolute;
-      right: 2rem;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 88px;
-      height: 88px;
-      opacity: 0.35;
-    }
-    section.block {
-      margin-bottom: 2rem;
-      padding: 1.75rem 1.85rem;
-      border-radius: var(--radius);
-      background: var(--surface);
-      backdrop-filter: blur(36px) saturate(1.12);
-      -webkit-backdrop-filter: blur(36px) saturate(1.12);
-      background: rgba(8, 10, 14, 0.55);
-      border: 1px solid var(--border);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-      opacity: 0;
-      transform: translateY(18px);
-      transition: opacity 0.7s ease, transform 0.7s ease;
-    }
-    section.block.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    section.block h3 {
-      font-family: var(--display);
-      font-size: 1.2rem;
-      font-weight: normal;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      margin: 0 0 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-    }
-    section.block h3 .tag {
-      font-family: var(--mono);
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      padding: 0.25rem 0.5rem;
-      border-radius: 6px;
-      background: rgba(255, 176, 32, 0.12);
-      color: var(--accent);
-      border: 1px solid var(--border);
-    }
-    section.block h4 {
-      font-size: 0.95rem;
-      font-weight: 700;
-      margin: 1.5rem 0 0.75rem;
-      color: var(--accent);
-    }
-    ul.clean {
-      margin: 0;
-      padding-left: 1.15rem;
-    }
-    ul.clean li { margin: 0.4rem 0; }
-    code, .mono {
-      font-family: var(--mono);
-      font-size: 0.88em;
-      padding: 0.12em 0.4em;
-      border-radius: 6px;
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      color: #ffd98a;
-    }
-    .table-wrap {
-      overflow-x: auto;
-      margin: 1rem 0;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.92rem;
-    }
-    th, td {
-      padding: 0.75rem 1rem;
-      text-align: left;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    }
-    th {
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--accent);
-      background: rgba(255, 176, 32, 0.06);
-    }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(255, 255, 255, 0.02); }
-    .badge-new {
-      display: inline-block;
-      font-family: var(--mono);
-      font-size: 0.65rem;
-      padding: 0.15rem 0.45rem;
-      border-radius: 4px;
-      background: rgba(61, 214, 140, 0.15);
-      color: var(--ok);
-      border: 1px solid rgba(61, 214, 140, 0.35);
-    }
-    .badge-issue {
-      background: rgba(255, 92, 92, 0.12);
-      color: var(--danger);
-      border-color: rgba(255, 92, 92, 0.35);
-    }
-    .issue-card {
-      display: grid;
-      gap: 1.25rem;
-      margin-top: 1rem;
-    }
-    @media (min-width: 720px) {
-      .issue-card { grid-template-columns: 1fr 1.1fr; align-items: start; }
-    }
-    .issue-shot {
-      position: relative;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 2px solid var(--danger);
-      box-shadow: 0 0 0 1px rgba(255, 92, 92, 0.2), 0 20px 50px rgba(0, 0, 0, 0.5);
-    }
-    .issue-shot img {
-      display: block;
-      width: 100%;
-      height: auto;
-      vertical-align: middle;
-    }
-    .issue-shot figcaption {
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      padding: 0.6rem 0.85rem;
-      background: rgba(255, 92, 92, 0.08);
-      color: var(--muted);
-    }
-    .compare {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-      margin: 0.75rem 0;
-    }
-    .compare div {
-      padding: 0.65rem 0.85rem;
-      border-radius: 8px;
-      font-size: 0.9rem;
-    }
-    .compare .exp { background: rgba(61, 214, 140, 0.08); border: 1px solid rgba(61, 214, 140, 0.25); }
-    .compare .act { background: rgba(255, 92, 92, 0.08); border: 1px solid rgba(255, 92, 92, 0.25); }
-    .roadmap li {
-      list-style: none;
-      padding: 0.55rem 0 0.55rem 1.75rem;
-      position: relative;
-      border-left: 2px solid var(--border);
-      margin-left: 0.5rem;
-    }
-    .roadmap li::before {
-      content: "";
-      position: absolute;
-      left: -5px;
-      top: 1rem;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 12px var(--accent);
-    }
-    footer.note {
-      font-size: 0.85rem;
-      color: var(--muted);
-      padding: 1.25rem;
-      border-top: 1px solid var(--border);
-      margin-top: 2rem;
-    }
-    #progress {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 3px;
-      width: 0%;
-      z-index: 100;
-      background: linear-gradient(90deg, var(--accent-blue), var(--accent-warm), var(--accent));
-      box-shadow: 0 0 20px var(--accent);
-    }
-    .weapon-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-      margin-top: 1.25rem;
-    }
-    .weapon-card {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.15rem 1.25rem;
-      background: rgba(0, 0, 0, 0.25);
-    }
-    .weapon-card header {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: baseline;
-      gap: 0.5rem 1rem;
-      margin-bottom: 0.75rem;
-    }
-    .weapon-card header h5 {
-      font-family: var(--display);
-      font-size: 1.15rem;
-      font-weight: normal;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      margin: 0;
-      color: var(--accent);
-    }
-    .weapon-card .represents {
-      font-size: 0.88rem;
-      color: var(--muted);
-    }
-    .stat-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
-      gap: 0.5rem;
-      margin: 0.75rem 0 1rem;
-    }
-    .stat-row div {
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      padding: 0.45rem 0.55rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.03);
-    }
-    .stat-row strong {
-      display: block;
-      font-family: var(--display);
-      font-size: 1.05rem;
-      color: var(--accent-warm);
-      letter-spacing: 0.03em;
-    }
-    .weapon-card .work-title {
-      font-size: 0.75rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--accent-warm);
-      margin: 0.5rem 0 0.35rem;
-    }
-    .weapon-card ol.work {
-      margin: 0;
-      padding-left: 1.2rem;
-      font-size: 0.92rem;
-    }
-    .weapon-card ol.work li { margin: 0.25rem 0; }
-    .attach-list {
-      margin: 0.35rem 0 0;
-      padding-left: 1.1rem;
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
-    .attach-none { font-size: 0.85rem; color: var(--muted); font-style: italic; }
-    .discovery-list { font-size: 0.9rem; }
-    .discovery-list li { margin: 0.35rem 0; }
-    .anim-viewer-wrap {
-      margin-top: 1rem;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      overflow: hidden;
-      background: rgba(0, 0, 0, 0.35);
-    }
-    #anim-viewer {
-      display: block;
-      width: 100%;
-      height: min(52vh, 420px);
-      min-height: 240px;
-    }
-    .anim-controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      align-items: center;
-      padding: 0.75rem 1rem;
-      border-top: 1px solid var(--border);
-    }
-    .anim-controls select, .anim-controls button {
-      font-family: var(--mono);
-      font-size: 0.85rem;
-      padding: 0.45rem 0.65rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: rgba(0, 0, 0, 0.4);
-      color: var(--text);
-    }
-    .anim-controls button { cursor: pointer; color: var(--accent); }
-    .anim-status {
-      flex: 1 1 100%;
       font-size: 0.8rem;
-      color: var(--muted);
-      margin: 0;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin: 0 0 0.8rem;
     }
-    .catalog-toolbar {
+    h1, h2, h3 { font-family: var(--display); font-weight: normal; text-transform: uppercase; line-height: 1.05; margin: 0; }
+    h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); letter-spacing: 0.04em; color: var(--yellow); }
+    .section-lead { color: var(--muted); max-width: 60ch; margin: 1rem 0 0; }
+    .reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); }
+    .reveal.in { opacity: 1; transform: none; }
+
+    /* ---------- Top nav ---------- */
+    header.top {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 40;
+      transition: background 0.4s, border-color 0.4s;
+      border-bottom: 1px solid transparent;
+    }
+    header.top.scrolled {
+      background: rgba(4, 5, 6, 0.82);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-color: var(--line);
+    }
+    header.top .wrap {
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.65rem;
       align-items: center;
-      margin: 1rem 0 0.75rem;
-    }
-    .catalog-toolbar select, .catalog-toolbar button {
-      font-family: var(--mono);
-      font-size: 0.85rem;
-      padding: 0.45rem 0.65rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: rgba(0, 0, 0, 0.4);
-      color: var(--text);
-    }
-    .catalog-toolbar button { cursor: pointer; color: var(--accent); }
-    .catalog-meta { font-size: 0.85rem; color: var(--muted); margin: 0 0 0.75rem; }
-    .catalog-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 0.65rem;
-    }
-    .catalog-grid img {
-      width: 100%;
-      aspect-ratio: 1;
-      object-fit: cover;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: #111;
-    }
-    .catalog-lists {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      justify-content: space-between;
+      height: 72px;
       gap: 1rem;
-      margin-top: 1rem;
     }
-    .catalog-lists h4 {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--accent-warm);
-      margin: 0 0 0.5rem;
-    }
-    .catalog-lists ul {
-      margin: 0;
-      padding-left: 1.1rem;
+    .brand img { height: 56px; width: auto; }
+    nav.links { display: flex; gap: 1.6rem; }
+    nav.links a {
+      text-decoration: none;
       font-size: 0.82rem;
-      max-height: 220px;
-      overflow: auto;
-    }
-    .catalog-lists li { margin-bottom: 0.2rem; }
-    .catalog-lists button.linkish {
-      background: none;
-      border: none;
-      color: var(--accent-blue);
-      cursor: pointer;
-      font: inherit;
-      padding: 0;
-      text-align: left;
-    }
-    details.prior-week {
-      margin-bottom: 2rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: var(--surface);
-      backdrop-filter: blur(36px) saturate(1.12);
-      -webkit-backdrop-filter: blur(36px) saturate(1.12);
-      overflow: hidden;
-    }
-    details.prior-week summary {
-      font-family: var(--display);
-      font-size: 1rem;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      padding: 1.1rem 1.35rem;
-      cursor: pointer;
-      color: var(--accent-blue);
-      list-style: none;
-      user-select: none;
-    }
-    details.prior-week summary::-webkit-details-marker { display: none; }
-    details.prior-week summary::after {
-      content: "▸";
-      float: right;
       color: var(--muted);
-      transition: transform 0.2s;
+      transition: color 0.2s;
     }
-    details.prior-week[open] summary::after { transform: rotate(90deg); }
-    details.prior-week .prior-body {
-      padding: 0 1.35rem 1.35rem;
-      border-top: 1px solid var(--border);
-      font-size: 0.92rem;
+    nav.links a:hover { color: var(--yellow); }
+    .btn-small {
+      font-size: 0.78rem !important;
+      padding: 0.5rem 0.9rem;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      color: var(--text) !important;
     }
-    details.prior-week h4 {
-      font-family: var(--display);
-      font-size: 0.95rem;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--accent-warm);
-      margin: 1.25rem 0 0.5rem;
+    @media (max-width: 760px) { nav.links a:not(.btn-small) { display: none; } }
+
+    /* ---------- Hero ---------- */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 120px 0 80px;
     }
-    details.prior-week .meta-discord {
+    .hero-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.35;
+      z-index: 0;
+      filter: saturate(1.2) contrast(1.05);
+    }
+    .hero-shade {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background:
+        linear-gradient(180deg, rgba(4,5,6,0.2) 0%, rgba(4,5,6,0.6) 60%, var(--bg) 100%),
+        linear-gradient(90deg, rgba(4,5,6,0.85) 0%, rgba(4,5,6,0.2) 70%);
+    }
+    .hero .wrap { z-index: 2; position: relative; }
+    .hero-logo {
+      width: min(560px, 80vw);
+      filter: drop-shadow(0 14px 40px rgba(0,0,0,0.7));
+      margin-bottom: 1.5rem;
+      animation: float 6s ease-in-out infinite;
+    }
+    @keyframes float { 50% { transform: translateY(-8px); } }
+    .hero h1 {
+      font-size: clamp(2.6rem, 8vw, 6rem);
+      letter-spacing: 0.02em;
+      color: var(--text);
+      text-shadow: 0 0 60px rgba(251, 242, 54, 0.18);
+    }
+    .hero h1 span { color: var(--yellow); }
+    .hero .tagline {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--muted);
+      max-width: 56ch;
+      margin: 1.4rem 0 2.2rem;
+    }
+    .disclaimer {
       font-size: 0.78rem;
       color: var(--muted);
-      margin: 0.75rem 0;
+      margin-top: 2.2rem;
+      max-width: 70ch;
+      opacity: 0.8;
     }
-    .week-banner {
+    .cta-row { display: flex; flex-wrap: wrap; gap: 0.9rem; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.95rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
       font-family: var(--display);
-      font-size: 0.85rem;
+      font-size: 0.95rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+      transition: transform 0.25s var(--ease), box-shadow 0.25s, background 0.25s, border-color 0.25s;
+      cursor: pointer;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--yellow), var(--orange));
+      color: #111;
+      box-shadow: 0 10px 30px rgba(224, 113, 38, 0.35);
+    }
+    .btn-primary:hover { box-shadow: 0 14px 40px rgba(224, 113, 38, 0.5); }
+    .btn-ghost {
+      background: rgba(8, 10, 14, 0.6);
+      color: var(--text);
+      border-color: var(--line-strong);
+      backdrop-filter: blur(8px);
+    }
+    .btn-ghost:hover { border-color: var(--yellow); color: var(--yellow); }
+    .btn img { width: 22px; height: 22px; }
+    .scroll-cue {
+      position: absolute;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--muted);
+      z-index: 2;
+      text-decoration: none;
+    }
+    .scroll-cue::after {
+      content: "";
+      display: block;
+      width: 1px;
+      height: 40px;
+      margin: 10px auto 0;
+      background: linear-gradient(var(--yellow), transparent);
+      animation: drip 1.8s ease-in-out infinite;
+    }
+    @keyframes drip { 0% { transform: scaleY(0); transform-origin: top; } 50% { transform: scaleY(1); transform-origin: top; } 51% { transform-origin: bottom; } 100% { transform: scaleY(0); transform-origin: bottom; } }
+
+    /* ---------- Ticker ---------- */
+    .ticker {
+      position: relative;
+      z-index: 3;
+      overflow: hidden;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: rgba(10, 12, 16, 0.9);
+      padding: 0.9rem 0;
+    }
+    .ticker-track {
+      display: flex;
+      width: max-content;
+      animation: scroll 38s linear infinite;
+    }
+    .ticker-track span {
+      font-family: var(--display);
+      font-size: 1rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      padding: 0 1.6rem;
+      color: var(--muted);
+    }
+    .ticker-track span.hot { color: var(--yellow); }
+    @keyframes scroll { to { transform: translateX(-50%); } }
+
+    /* ---------- Lineage ---------- */
+    .lineage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      margin-top: 3rem;
+    }
+    .lineage-card {
+      position: relative;
+      padding: 2rem 1.6rem;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(160deg, rgba(255,255,255,0.03), rgba(0,0,0,0.4));
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s var(--ease);
+    }
+    .lineage-card:hover { border-color: var(--line-strong); transform: translateY(-4px); }
+    .lineage-card .num {
+      font-family: var(--display);
+      font-size: 3.2rem;
+      color: rgba(251, 242, 54, 0.08);
+      position: absolute;
+      top: 0.4rem;
+      right: 1rem;
+    }
+    .lineage-card h3 { font-size: 1.25rem; color: var(--yellow); letter-spacing: 0.04em; margin-bottom: 0.7rem; }
+    .lineage-card p { color: var(--muted); margin: 0; font-size: 0.95rem; }
+
+    /* ---------- Download ---------- */
+    .download-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin-top: 3rem;
+    }
+    .dl-card {
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 1.7rem;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(8, 10, 14, 0.6);
+      backdrop-filter: blur(10px);
+      transition: border-color 0.3s, transform 0.3s var(--ease);
+    }
+    .dl-card:hover { border-color: var(--line-strong); transform: translateY(-4px); }
+    .dl-card.featured {
+      border-color: var(--line-strong);
+      background: linear-gradient(160deg, rgba(224,113,38,0.12), rgba(8,10,14,0.7));
+      box-shadow: 0 20px 60px rgba(224, 113, 38, 0.12);
+    }
+    .dl-card .icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line);
+      margin-bottom: 1.2rem;
+    }
+    .dl-card .icon img { width: 32px; height: 32px; }
+    .dl-card h3 { font-size: 1.15rem; color: var(--yellow); letter-spacing: 0.05em; margin-bottom: 0.6rem; }
+    .dl-card p { color: var(--muted); font-size: 0.93rem; margin: 0 0 1.4rem; flex: 1; }
+    .dl-card .actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+    .dl-card .actions .btn { font-size: 0.8rem; padding: 0.7rem 1rem; }
+    .dl-card code {
+      display: block;
+      font-size: 0.78rem;
+      padding: 0.6rem 0.8rem;
+      border-radius: 8px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid var(--line);
+      color: #ffd98a;
+      overflow-x: auto;
+      margin: 0 0 1rem;
+      white-space: nowrap;
+    }
+
+    /* ---------- Features ---------- */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1rem;
+      margin-top: 3rem;
+    }
+    .feature {
+      padding: 1.4rem 1.3rem;
+      border-left: 2px solid var(--orange);
+      background: linear-gradient(90deg, rgba(224,113,38,0.07), transparent 70%);
+      border-radius: 0 10px 10px 0;
+    }
+    .feature h4 {
+      margin: 0 0 0.4rem;
+      font-family: var(--display);
+      font-weight: normal;
+      font-size: 0.95rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+    .feature p { margin: 0; font-size: 0.9rem; color: var(--muted); }
+
+    /* ---------- Arsenal ---------- */
+    .arsenal {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 1rem;
+      margin-top: 3rem;
+    }
+    .gun {
+      display: block;
+      text-decoration: none;
+      padding: 1.4rem 1.2rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(0,0,0,0.35);
+      transition: border-color 0.25s, transform 0.25s var(--ease), background 0.25s;
+    }
+    .gun:hover { border-color: var(--yellow); transform: translateY(-3px); background: rgba(251,242,54,0.04); }
+    .gun .name { font-family: var(--display); font-size: 1.35rem; color: var(--yellow); letter-spacing: 0.04em; }
+    .gun .rep { font-size: 0.82rem; color: var(--muted); margin-top: 0.4rem; }
+    .gun .tagline-g { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--orange); margin-top: 0.8rem; }
+
+    /* ---------- Gallery ---------- */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 0.9rem;
+      margin-top: 3rem;
+    }
+    .gallery figure {
+      margin: 0;
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #050608;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+    }
+    .gallery img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 10px;
+      transition: transform 0.5s var(--ease);
+    }
+    .gallery figure:hover img { transform: scale(1.06); }
+    .gallery figcaption {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      padding: 0.5rem 0.7rem;
+      font-size: 0.7rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--accent);
-      margin: 0 0 1rem;
+      background: linear-gradient(transparent, rgba(0,0,0,0.85));
+      color: var(--muted);
+    }
+
+    /* ---------- Updates teaser ---------- */
+    .updates-box {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 2rem;
+      align-items: center;
+      padding: 2.4rem;
+      border-radius: 16px;
+      border: 1px solid var(--line-strong);
+      background: linear-gradient(135deg, rgba(224,113,38,0.08), rgba(8,10,14,0.7));
+    }
+    .updates-box ul { margin: 0; padding-left: 1.1rem; color: var(--muted); }
+    .updates-box li { margin: 0.45rem 0; font-size: 0.95rem; }
+    @media (max-width: 800px) { .updates-box { grid-template-columns: 1fr; } }
+
+    /* ---------- Footer ---------- */
+    footer.site {
+      position: relative;
+      z-index: 3;
+      border-top: 1px solid var(--line);
+      padding: 3rem 0 2.5rem;
+      background: rgba(4,5,6,0.85);
+    }
+    .foot-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+    .foot-grid img { height: 46px; width: auto; }
+    .foot-links { display: flex; flex-wrap: wrap; gap: 1.4rem; }
+    .foot-links a { color: var(--muted); text-decoration: none; font-size: 0.88rem; }
+    .foot-links a:hover { color: var(--yellow); }
+    .fine { font-size: 0.78rem; color: var(--muted); max-width: 90ch; margin-top: 2rem; line-height: 1.7; }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 640px) {
+      section { padding: 4.5rem 0; }
+      .updates-box { padding: 1.6rem; }
+      .intro-title { font-size: 0.7rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .ticker-track, .hero-logo, .scroll-cue::after { animation: none; }
+      .reveal { transition: none; opacity: 1; transform: none; }
     }
   </style>
 </head>
 <body>
-  <div id="progress" aria-hidden="true"></div>
-  <canvas id="webgl" aria-hidden="true"></canvas>
-  <div class="grain" aria-hidden="true"></div>
-  <div class="vignette" aria-hidden="true"></div>
 
-  <div class="layout">
-    <nav class="side" aria-label="Section navigation">
-      <div class="logo-wrap">
-        <img src="https://i.ibb.co/b56PstjP/image-2026-10-19-235909691.png" width="440" height="220" alt="Snack Ops II SDK" />
-      </div>
-      <h1>Dev update log</h1>
-      <ul id="nav-links">
-        <li><a href="#prior-week">Prior week · Engine (collapsed)</a></li>
-        <li><a href="#this-week">This week — Oct 2026</a></li>
-        <li><a href="#ugc-launcher">Snack Ops HQ Launcher</a></li>
-        <li><a href="#hud">HUD · Death quotes</a></li>
-        <li><a href="#crosshair">Crosshair FP/TP</a></li>
-        <li><a href="#systems">Ladders · zones · UI</a></li>
-        <li><a href="#anim-preview">Animation preview</a></li>
-        <li><a href="#web-catalog">Web export catalog</a></li>
-        <li><a href="#weapons">Weapons roster</a></li>
-        <li><a href="#discovery">Unlisted activity</a></li>
-        <li><a href="#assets">Assets touched</a></li>
-        <li><a href="#known">Known issues</a></li>
-        <li><a href="#next">Coming next</a></li>
-        <li><a href="Docs/tools/map-pack-install.html">Map pack install (web)</a></li>
-      </ul>
-      <div class="meta-pills">
-        <span class="pill">UE 5.8</span>
-        <span class="pill">SnackOps_SDK</span>
-      </div>
-    </nav>
-
-    <main>
-      <header class="hero" id="latest">
-        <h2>Snack Ops dev updates</h2>
-        <p class="lead">Team changelog and GitHub Pages home for <strong>Call-of-Dutie-Snack-Ops</strong> (UE 5.8). Not a public release manifest.</p>
-      </header>
-
-      <details class="prior-week block visible" id="prior-week">
-        <summary>Prior week — Engine &amp; AI refactor (UE 5.8.2)</summary>
-        <div class="prior-body">
-          <p>Completed before the current October content pass (the <strong>4,000+</strong> file activity scan includes this engine work plus later asset edits).</p>
-
-          <h4>Summary</h4>
-          <p>Snack Ops SDK <strong>engine version migration and stability sweep</strong>: critical movement bugs, legacy API deprecations, and a <strong>UE 5.8 physics regression fix</strong> to restore performance in line with the custom 5.3.2 build.</p>
-
-          <h4>Movement &amp; navigation refactor</h4>
-          <ul class="clean">
-            <li><strong>Ledge stability:</strong> Third-person movement when walking on, near, or falling off ledges.</li>
-            <li><strong>Navigation core:</strong> Foundational AI pathfinding + Character Movement Component (CMC) navigation improvements.</li>
-            <li><strong>API modernization:</strong> Character acceleration was ignored due to deprecation.
-              <ul class="attach-list">
-                <li>Old (ignored): <code>use_acceleration_for_paths</code> on CMC</li>
-                <li>New (active): <code>NavMovementProperties.bUseAccelerationForPaths</code></li>
-              </ul>
-            </li>
-          </ul>
-
-          <h4>Chaos physics &amp; engine fix (~30% performance)</h4>
-          <p>Stress tests showed ~<strong>30%</strong> navigation/physics substepping cost vs. the old build.</p>
-          <ul class="clean">
-            <li><strong>Symptom:</strong> CPU hitch on heavy runtime (grenades, shoot-while-move).</li>
-            <li><strong>Gameplay:</strong> AI tracking lag → movement desync, panic, visible pops/teleports.</li>
-            <li><strong>Root cause:</strong> UE 5.8 regression — <code>AddUnique()</code> validation on a large array every physics step.</li>
-          </ul>
-          <p><strong>Source build patch</strong> — <code>Engine/Source/Runtime/Experimental/Chaos/Private/Chaos/PBDRigidsSolver.cpp</code></p>
-          <pre class="mono" style="padding:0.75rem;border-radius:8px;overflow:auto;font-size:0.8rem"><code>// Changed from:
-PendingDestroyPhysicsProxy.AddUnique();
-
-// Changed to:
-PendingDestroyPhysicsProxy.Add();</code></pre>
-          <p>Removes duplicate-check tax on that array; regains the ~30% and reduces physics micro-stutters.</p>
-
-          <h4>Launcher build workaround (no source compile)</h4>
-          <p>On Epic Launcher binaries you cannot patch <code>.cpp</code>. Mitigation for local testing:</p>
-          <ol class="work">
-            <li>Select high-poly map assets (houses, modular fences, roofs) in Content Browser.</li>
-            <li>Right-click → <strong>Asset Actions → Bulk Edit via Property Matrix</strong>.</li>
-            <li>Set <strong>Collision Complexity</strong> from <em>Use Complex Collision As Simple</em> → <strong>Project Default</strong>.</li>
-          </ol>
-          <p class="meta-discord">Iron Will Interactive — 8/31/2026 · Future: proper UCX collision meshes for launcher creators.</p>
-
-          <h4>Planned git commit summary (Aug 2026 thread)</h4>
-          <p>Unified TP/FP camera, AI pathfinding wall-clip fixes, global physics baseline, 1-frame weapon attachment desync fix.</p>
-          <ul class="clean">
-            <li><strong>TP camera:</strong> Initial third-person camera; turning lag to cut foot slide; dynamic lag (8.0 pos / 12.0 rot, 300 max distance).</li>
-            <li><strong>Mesh visibility:</strong> Owner No See / Only Owner See split for FP vs TP meshes.</li>
-            <li><strong>AI:</strong> Agent NavMesh bounds; custom nav collision profiles; RecastNavMesh as primary nav data — agent radius bound to capsule.</li>
-            <li><strong>UE 5.8 port:</strong> Hand IK / AnimBP FABRIK needs; skeletal mesh asset updates; physics async tick at locked <strong>60 Hz</strong> (0.016667).</li>
-          </ul>
-
-          <h4>Blocked / holding (historical)</h4>
-          <p><strong>HOLDING FOR COMMIT</strong> — waiting for world lighting build to finish before repository push.</p>
-
-          <h4>In progress after lighting (historical checklist)</h4>
-          <ul class="clean">
-            <li>Fix 1-frame hand slide on weapon grips during hard landings (mesh tick <code>TG_PrePhysics</code> → <code>TG_PostUpdateWork</code>).</li>
-            <li>Verify grip on high-impact landing, camera flick/shake gap, FP zero drift after tick change.</li>
-          </ul>
-        </div>
-      </details>
-
-      <p class="week-banner block visible" id="this-week">This week — October 2026</p>
-
-      <section class="block visible" id="ugc-launcher">
-        <h3><span class="tag">Launcher</span> Snack Ops HQ &amp; UGC</h3>
-        <p>We ship a dedicated <strong>Snack Ops HQ Launcher</strong> (Electron) for this SDK — play/test builds, DEVELOP (clone this repo with Git LFS, open Unreal), standard mod packs, and bundled UGC with an in-app <strong>Gun Import Guide</strong>.</p>
-        <p><strong>Launcher repository:</strong> <a href="https://github.com/gamedev44/SnackOpsHQLauncher" rel="noopener">github.com/gamedev44/SnackOpsHQLauncher</a></p>
-        <ul class="clean">
-          <li><strong>SDK repository (this project):</strong> <a href="https://github.com/gamedev44/Snack-Ops" rel="noopener">github.com/gamedev44/Snack-Ops</a></li>
-          <li><strong>AK-47 kept</strong> — live gun content under <code>Content/FPSK/Guns/AK47</code> (Fab / manual import per Gun Import Guide). <code>ExternalAssets/AK47</code> remains for presets and animation references.</li>
-          <li><strong>UGC install (Oct 19)</strong> — launcher copies bundled packs to <code>Content/&lt;pack&gt;/</code> only. No automatic <code>UGC_Incoming</code> staging, editor full-load gate, promote, or Python fixup on install.</li>
-          <li>Authors finish guns in-editor: promote into <code>FPSK/Guns</code>, assign skeletons, fix material paths — documented in the launcher UGC tab + roadmap notes.</li>
-        </ul>
-      </section>
-
-      <section class="block visible" id="hud">
-        <h3><span class="tag">HUD</span> Death quotes</h3>
-        <ul class="clean">
-          <li><code>BP_MainHUD</code> uses an <strong>Array of Text</strong> variable <code>DeathQuotes</code> (not the old enum-driven death message pin).</li>
-          <li>All <strong>15</strong> lines from <code>E_DeathMessages</code> moved into default array values (war-themed copy, no display asterisks).</li>
-          <li><strong>Paste workflow:</strong> copy widget Default Values (<code>Tagged</code> JSON), edit display strings only, paste into <strong>Details → DeathQuotes → Default Value</strong>. Template: <code>TextArray.json</code> (keep NSLOCTEXT keys when expanding count).</li>
-        </ul>
-      </section>
-
-      <section class="block" id="crosshair">
-        <h3><span class="tag">Aim</span> Crosshair — third person vs first person</h3>
-        <ul class="clean">
-          <li>Third-person crosshair tuned to <strong>line up with first-person</strong> at common engagement distances — fewer odd offsets.</li>
-          <li><strong>Planned:</strong> dynamic convergence so FP/TP reticles stay aligned <strong>at all distances</strong>. This pass is an improvement, not the final system.</li>
-        </ul>
-      </section>
-
-      <section class="block" id="systems">
-        <h3><span class="tag">World</span> Ladders, zones &amp; UI triggers</h3>
-        <ul class="clean">
-          <li><strong>Procedural ladder system</strong> — overhauled and added back; climb/detach tuned on <code>BP_Ladder</code> (procedural placement/behavior pass).</li>
-          <li><strong>Icon trigger zone → UI message</strong> — entering marked volumes shows contextual HUD prompts (icons + copy). Wired through course/help actors such as <code>BP_CourseTrigger</code>, <code>BP_Help</code>, and help marker materials.</li>
-          <li><strong>Stage zone system</strong> — labeled stages for modes like <strong>target practice</strong>, course legs, and other training slices via <code>BP_CourseVolume</code> / trigger settings (per-zone rules and messaging).</li>
-          <li><strong>Ballistics meshes</strong> — <strong>millimeter-accurate bullet</strong> static/skeletal meshes for tracers and projectile visuals (caliber-true sizing).</li>
-          <li>More stage types and messaging strings can be appended here as you finalize names (same October content wave as maps, Free Roam, and import guides).</li>
-        </ul>
-      </section>
-
-      <section class="block" id="anim-preview">
-        <h3><span class="tag">3D</span> Animation preview (Three.js)</h3>
-        <p>Browsers cannot read <code>.uasset</code>. Use <strong>Unreal Python</strong> (batch) or manual export to <code>Docs/web_export/</code>, then serve this page over HTTP.</p>
-        <ul class="clean">
-          <li><strong>Batch (recommended):</strong> <code>Scripts/ue_export_web_catalog.py</code> via UE <strong>5.8</strong> <code>UnrealEditor-Cmd.exe … -ExecutePythonScript=…</code>. Scans <code>/Game/FPSK</code> + <strong>Splash</strong> — exports <strong>all textures (PNG)</strong>, <strong>skeletal + static meshes (GLB/FBX)</strong>, <strong>anim sequences (FBX)</strong>, preset/skeleton lists → <code>Docs/web_export/catalog.json</code>.</li>
-          <li><strong>Offline names only:</strong> <code>python Scripts/sync_web_manifest.py</code> merges <code>Docs/data/asset_catalog.json</code> into <code>Docs/web_export/browse_manifest.json</code> (no binary export).</li>
-          <li>Manual: skeletal mesh / anim → glTF or FBX; textures → PNG under <code>Docs/web_export/textures/</code>.</li>
-        </ul>
-        <div class="anim-viewer-wrap">
-          <canvas id="anim-viewer" aria-label="GLB animation preview"></canvas>
-          <div class="anim-controls">
-            <select id="anim-select" aria-label="Choose animation clip"></select>
-            <button type="button" id="anim-play">Play</button>
-            <button type="button" id="anim-pause">Pause</button>
-            <p class="anim-status" id="anim-status">Loading manifest…</p>
-          </div>
-        </div>
-      </section>
-
-      <section class="block" id="web-catalog">
-        <h3><span class="tag">Web</span> Gun catalog (names + exports)</h3>
-        <p class="catalog-meta" id="catalog-status">Loading browse manifest…</p>
-        <p class="catalog-meta">Shows only files already under <code>Docs/web_export/</code> (partial batch export — not the whole project).</p>
-        <div class="catalog-toolbar">
-          <label for="catalog-platform">Platform</label>
-          <select id="catalog-platform" aria-label="Weapon platform"></select>
-          <button type="button" id="catalog-refresh">Reload manifest</button>
-        </div>
-        <div class="catalog-grid" id="catalog-textures" aria-label="Exported texture previews"></div>
-        <div class="catalog-lists">
-          <div>
-            <h4>Presets</h4>
-            <ul id="catalog-presets"></ul>
-          </div>
-          <div>
-            <h4>Skeletal meshes</h4>
-            <ul id="catalog-skm"></ul>
-          </div>
-          <div>
-            <h4>Static meshes</h4>
-            <ul id="catalog-sm"></ul>
-          </div>
-          <div>
-            <h4>Animations (names)</h4>
-            <ul id="catalog-anims"></ul>
-          </div>
-        </div>
-      </section>
-
-      <section class="block" id="weapons">
-        <h3><span class="tag">Arms</span> Licensing names vs what they represent</h3>
-        <p>Fictional / licensing-safe names in assets and UI. Each card lists <strong>what was overhauled</strong>, <strong>attachments</strong>, and on-disk <strong>counts</strong> (meshes, textures, animations, blueprints, presets, skeletons).</p>
-
-        <div class="weapon-grid">
-
-          <article class="weapon-card" id="weapon-ak47">
-            <header><h5>AK-47</h5><span class="represents">Represents: Kalashnikov AK-47 (7.62×39 mm)</span><span class="badge-new">IN REPO · MANUAL IMPORT OK</span></header>
-            <div class="stat-row">
-              <div><strong>19</strong> mesh assets</div>
-              <div><strong>58</strong> textures</div>
-              <div><strong>39</strong> animations</div>
-              <div><strong>12</strong> blueprints</div>
-              <div><strong>11</strong> presets</div>
-              <div><strong>1</strong> skeleton</div>
-            </div>
-            <p class="work-title">What was done</p>
-            <ol class="work">
-              <li>Ground-up platform: <code>BP_AK47</code> weapon blueprint + <strong>11</strong> preset builds.</li>
-              <li><code>FPSK_AK47_Skeleton</code> assigned to AK skeletal meshes (<code>SKM_AK47</code>, <code>SKM_AK47_Full</code>).</li>
-              <li>Re-authored gun animation set (FP handling, reload, fire) with improved realism.</li>
-              <li>Procedural sway, lean, and recoil hooks — tuned for feel, not over-simulation.</li>
-              <li>Third-person gun animations wired where applicable.</li>
-            </ol>
-            <p class="work-title">Attachments (7)</p>
-            <ul class="attach-list">
-              <li>Magazines: Compact, Default, Extended</li>
-              <li>Stocks: Default, Folding, Triangle</li>
-              <li><code>SM_AK47_SightRail</code></li>
-            </ul>
-          </article>
-
-          <article class="weapon-card" id="weapon-uzx">
-            <header><h5>UZX</h5><span class="represents">Represents: Uzi-family SMG (“Uzi X”)</span><span class="badge-new">NEW · FULL OVERHAUL</span></header>
-            <div class="stat-row">
-              <div><strong>11</strong> mesh assets</div>
-              <div><strong>37</strong> textures</div>
-              <div><strong>40</strong> animations</div>
-              <div><strong>9</strong> blueprints</div>
-              <div><strong>8</strong> presets</div>
-              <div><strong>1</strong> skeleton</div>
-            </div>
-            <p class="work-title">What was done</p>
-            <ol class="work">
-              <li>Full import pipeline: <code>BP_UZX</code> + <strong>8</strong> presets (Tactical, Xtreme, Deadeye, etc.).</li>
-              <li><code>FPSK_UZX_Skeleton</code> → <code>SKM_UZX</code> pairing.</li>
-              <li>New animation suite with procedural sway / lean / recoil integration.</li>
-              <li>Gun case / demo presentation assets (kit-style packaging).</li>
-            </ol>
-            <p class="work-title">Attachments</p>
-            <p class="attach-none">No dedicated attachment static meshes in <code>Meshes/Attachments/</code> — variants handled via presets.</p>
-          </article>
-
-          <article class="weapon-card" id="weapon-blk18">
-            <header><h5>BLK-18</h5><span class="represents">Represents: Glock 18 (9×19 mm machine pistol)</span><span class="badge-new">NEW · FULL OVERHAUL</span></header>
-            <div class="stat-row">
-              <div><strong>11</strong> mesh assets</div>
-              <div><strong>39</strong> textures</div>
-              <div><strong>39</strong> animations</div>
-              <div><strong>13</strong> blueprints</div>
-              <div><strong>12</strong> presets</div>
-              <div><strong>1</strong> skeleton</div>
-            </div>
-            <p class="work-title">What was done</p>
-            <ol class="work">
-              <li><code>BP_BLK18</code> base + <strong>12</strong> preset paintjobs/builds (Gold, Hitman, Tac Auto, etc.).</li>
-              <li><code>FPSK_BLK18_Skeleton</code> on <code>SKM_BLK18</code>.</li>
-              <li>Re-authored animations; procedural sway / lean / recoil on FP rig.</li>
-            </ol>
-            <p class="work-title">Attachments</p>
-            <p class="attach-none">No attachment mesh folder — configuration via presets/silenced builds.</p>
-          </article>
-
-          <article class="weapon-card" id="weapon-m4a1">
-            <header><h5>M4A1</h5><span class="represents">Represents: Colt M4A1 / M4 carbine (5.56×45 mm)</span><span class="badge-new">NEW · FULL OVERHAUL</span></header>
-            <div class="stat-row">
-              <div><strong>8</strong> mesh assets</div>
-              <div><strong>25</strong> textures</div>
-              <div><strong>77</strong> animations</div>
-              <div><strong>26</strong> blueprints</div>
-              <div><strong>26</strong> presets</div>
-              <div><strong>1</strong> skeleton</div>
-            </div>
-            <p class="work-title">What was done</p>
-            <ol class="work">
-              <li>Largest preset line in this pass: <strong>26</strong> <code>BP_M4A1*</code> builds (NV, Sniper, Decked, Element, …).</li>
-              <li><code>FPSK_M4A1_Skeleton</code> tied to M4A1 skeletal mesh content.</li>
-              <li>Expanded animation count (FP + TP + variant-specific clips).</li>
-              <li>Procedural sway, lean, recoil — same realism target as other new rifles.</li>
-            </ol>
-            <p class="work-title">Attachments</p>
-            <p class="attach-none">Attachment behavior via preset/loadout configs rather than separate attachment meshes in this tree.</p>
-          </article>
-
-          <article class="weapon-card" id="weapon-fists">
-            <header><h5>Fists</h5><span class="represents">Represents: unarmed melee · knife still on character</span><span class="badge-new">NEW · MELEE</span></header>
-            <div class="stat-row">
-              <div><strong>1</strong> mesh assets</div>
-              <div><strong>1</strong> textures</div>
-              <div><strong>30</strong> animations</div>
-              <div><strong>1</strong> blueprints</div>
-              <div><strong>1</strong> presets</div>
-              <div><strong>1</strong> skeleton</div>
-            </div>
-            <p class="work-title">What was done</p>
-            <ol class="work">
-              <li>New melee system: <code>BP_Fists</code> (preset line planned).</li>
-              <li><code>FPSK_FistsIK_Skeleton</code> for hand-to-hand IK chain.</li>
-              <li>Melee-focused animation set; knife remains on character separately.</li>
-            </ol>
-            <p class="work-title">Attachments</p>
-            <p class="attach-none">None — preset variants coming later.</p>
-          </article>
-
-          <article class="weapon-card" id="weapon-falcon">
-            <header><h5>Falcon</h5><span class="represents">Represents: Desert Eagle (.50 AE)</span></header>
-            <div class="stat-row">
-              <div><strong>2</strong> mesh assets</div>
-              <div><strong>8</strong> textures</div>
-              <div><strong>40</strong> animations</div>
-              <div><strong>4</strong> blueprints</div>
-              <div><strong>4</strong> presets</div>
-              <div><strong>1</strong> skeleton</div>
-            </div>
-            <p class="work-title">What was done (this update)</p>
-            <ol class="work">
-              <li>Existing platform — <strong>animation correction pass</strong> (fire/reload/handling).</li>
-              <li><code>FPSK_Falcon_Skeleton</code> + <code>BP_Falcon*</code> presets unchanged in scope.</li>
-              <li>Weapon melee animation fixes — <strong>next update</strong>.</li>
-            </ol>
-            <p class="work-title">Attachments</p>
-            <p class="attach-none">None in attachment mesh folder.</p>
-          </article>
-
-          <article class="weapon-card" id="weapon-tsr9">
-            <header><h5>TSR-9</h5><span class="represents">Represents: TSR-97 — UMP-style 9×19 mm SMG</span></header>
-            <div class="stat-row">
-              <div><strong>7</strong> mesh assets</div>
-              <div><strong>13</strong> textures</div>
-              <div><strong>44</strong> animations</div>
-              <div><strong>8</strong> blueprints</div>
-              <div><strong>8</strong> presets</div>
-              <div><strong>1</strong> gun skeleton</div>
-            </div>
-            <p class="work-title">What was done</p>
-            <ol class="work">
-              <li>Pre-overhaul platform — not part of the new ground-up import batch.</li>
-              <li>Stock attachment skeletal content exists (see <a href="#known">known HUD icon issue</a> in melee).</li>
-              <li>Existing <strong>8</strong> presets retained.</li>
-            </ol>
-            <p class="work-title">Attachments</p>
-            <p class="attach-none">Stock mesh/skeleton assets under TSR9 content (not AK-style attachment folder).</p>
-          </article>
-
-        </div>
-        <p class="mono" style="margin-top:1rem;font-size:0.82rem;color:var(--muted)">Regenerate counts: <code>python Saved/_weapon_inventory.py</code> · <code>Docs/data/weapon_inventory.json</code></p>
-      </section>
-
-      <section class="block" id="discovery">
-        <h3><span class="tag">Scan</span> Unlisted activity since 16 Oct 2026</h3>
-        <p>Local disk + autosaves (this project folder). <strong>GitHub:</strong> not linked here — run <code>gh auth login</code> in a git-backed clone for remote diffs.</p>
-        <p><strong>4,210</strong> Content <code>.uasset</code> / <code>.umap</code> files touched on disk since the cutoff (includes bulk imports).</p>
-        <p class="work-title">Hot areas you may want in the changelog</p>
-        <ul class="clean discovery-list">
-          <li><strong>MetaHumans</strong> — large churn under <code>Content/FPSK/MetaHumans/</code> and <code>MetaHumans_OPT_High/</code> (character bodies/common).</li>
-          <li><strong>Camo materials</strong> — <code>Content/FPSK/Materials/Camo/</code> (~186 files in bucket scan).</li>
-          <li><strong>Animation sequencers & equipment</strong> — <code>Animations/Sequencers</code>, <code>Animations/Equipment</code>, <code>Animations/Poses</code>.</li>
-          <li><strong>Maps</strong> — <code>TheEmptyLot</code>, <code>TDM_Salvage</code>, <code>LogoRender</code> recently saved.</li>
-          <li><strong>Free roam</strong> — <code>BP_FreeRoamGameMode</code> autosave activity.</li>
-          <li><strong>Help markers</strong> — <code>BP_Help</code>, <code>M_HelpMarker</code> materials.</li>
-          <li><strong>HUD / menu</strong> — <code>BP_MainMenu</code>, <code>Textures/HUD</code>.</li>
-          <li><strong>Sights textures</strong> — <code>Content/FPSK/Textures/Sights/</code>.</li>
-          <li><strong>Niagara</strong> — particle work under <code>Particles/Niagara/</code>.</li>
-          <li><strong>Gun import guide</strong> — <code>GunImportGuide</code> autosaved Oct 18.</li>
-        </ul>
-        <p class="work-title">Recent autosaves (pick for manual review)</p>
-        <ul class="attach-list">
-          <li><code>FirstPersonCharacter_Auto1–3</code>, <code>FPSGuy_Auto1–3</code> (Oct 18)</li>
-          <li><code>BP_MainHUD_Auto1–5</code> (Oct 18–19)</li>
-          <li><code>BP_MyPlayerController_Auto3</code></li>
-          <li><code>BP_BLK18_Auto1</code>, <code>SKM_BLK18_Auto1</code> (Oct 17)</li>
-          <li><code>BP_FreeRoamGameMode_Auto4</code></li>
-        </ul>
-        <p class="mono" style="font-size:0.82rem;color:var(--muted)">Full machine report: <code>Saved/activity_since_oct16.json</code> · Re-run: <code>python Saved/_activity_since_oct16.py</code></p>
-      </section>
-
-      <section class="block" id="assets">
-        <h3><span class="tag">Assets</span> Character / HUD touched</h3>
-        <ul class="clean">
-          <li><code>FirstPersonCharacter</code> — crosshair, camera/reticle work.</li>
-          <li><code>BP_MainHUD</code> — death quote array, fade/random selection.</li>
-          <li><code>BP_Ladder</code>, <code>BP_CourseTrigger</code>, <code>BP_CourseVolume</code>, <code>BP_Help</code> — ladders, icon triggers, stage zones.</li>
-        </ul>
-      </section>
-
-      <section class="block" id="known">
-        <h3><span class="tag badge-issue">Known issue</span> Melee + attachment icon bleed</h3>
-        <p>While in <strong>melee</strong> (e.g. <strong>Fists</strong>), the HUD can still draw the <strong>TSR-9 (UMP-style) stock attachment</strong> icon. Firearm attachment icons should hide when the active weapon is melee-only.</p>
-        <div class="compare">
-          <div class="exp"><strong>Expected</strong><br/>No firearm attachment icons in melee.</div>
-          <div class="act"><strong>Actual</strong><br/>UMP stock mesh icon visible.</div>
-        </div>
-        <div class="issue-card">
-          <div></div>
-          <figure class="issue-shot">
-            <img src="Docs/known-issue-melee-tsr9-stock-icon.png" alt="First-person melee view with erroneous TSR-9 UMP stock attachment icon in corner" width="800" height="450" loading="lazy" />
-            <figcaption>Red box: erroneous stock attachment icon during fists/melee POV</figcaption>
-          </figure>
-        </div>
-      </section>
-
-      <section class="block" id="next">
-        <h3><span class="tag">Roadmap</span> Coming next (draft)</h3>
-        <ul class="clean roadmap">
-          <li>Falcon / weapon <strong>melee animation</strong> pass</li>
-          <li><strong>Fists preset line</strong> when melee variants are ready</li>
-          <li><strong>Dynamic crosshair convergence</strong> (all distances)</li>
-          <li>HUD / weapon polish</li>
-          <li>Fix <strong>melee → hide attachment icons</strong> (TSR-9 stock bleed)</li>
-        </ul>
-      </section>
-
-      <footer class="note block visible">
-        Add a dated section when a playtest-worthy chunk lands. Keep player-facing patch notes separate if you ship publicly. Source markdown: <code>UPDATES.md</code>.
-      </footer>
-    </main>
+  <!-- ===== Cinematic intro loader ===== -->
+  <div id="intro" role="dialog" aria-label="Snack Ops NX1 loader cinematic">
+    <video id="intro-video" playsinline preload="auto" poster="assets/img/loader-poster.jpg">
+      <source src="Docs/animations/Snack%20Ops%20NX1%20Loader%20Cinematic.mp4" type="video/mp4" />
+    </video>
+    <div class="intro-title">Snack Ops 2 · NX1 Loader</div>
+    <div class="intro-ui">
+      <button type="button" id="intro-sound">Sound on</button>
+      <button type="button" id="intro-skip">Skip ›</button>
+    </div>
   </div>
 
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/"
-    }
-  }
-  </script>
-  <script type="module">
-    import * as THREE from "three";
-    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="reticle" aria-hidden="true"><i></i></div>
 
-    const canvas = document.getElementById("webgl");
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  <!-- ===== Top nav ===== -->
+  <header class="top" id="top">
+    <div class="wrap">
+      <a class="brand" href="#home" aria-label="Snack Ops 2 home">
+        <img src="https://i.ibb.co/b56PstjP/image-2026-10-19-235909691.png" alt="Snack Ops II SDK" onerror="this.onerror=null;this.src='Docs/branding/SnackOps_SDK_Logo.png'" />
+      </a>
+      <nav class="links" aria-label="Primary">
+        <a href="#lineage">Lineage</a>
+        <a href="#download">Download</a>
+        <a href="#features">Features</a>
+        <a href="#arsenal">Arsenal</a>
+        <a href="updates.html">Dev updates</a>
+        <a class="btn-small" href="https://github.com/gamedev44/Snack-Ops" rel="noopener">Source</a>
+      </nav>
+    </div>
+  </header>
 
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(window.innerWidth, window.innerHeight);
+  <!-- ===== Hero ===== -->
+  <main>
+  <section class="hero" id="home">
+    <video class="hero-video" autoplay muted loop playsinline poster="assets/img/loader-poster.jpg" aria-hidden="true">
+      <source src="Docs/animations/Snack%20Ops%20NX1%20Loader%20Cinematic.mp4" type="video/mp4" />
+    </video>
+    <div class="hero-shade" aria-hidden="true"></div>
+    <div class="wrap">
+      <img class="hero-logo" src="https://i.ibb.co/b56PstjP/image-2026-10-19-235909691.png" alt="Snack Ops II SDK logo" onerror="this.onerror=null;this.src='Docs/branding/SnackOps_SDK_Logo.png'" />
+      <p class="eyebrow">Fan-made · Unreal Engine 5.8</p>
+      <h1>Snack Ops <span>2</span></h1>
+      <p class="tagline">A tactical shooter SDK rebuilt from the ground up. Born from the spirit of Black Ops 2 and the canceled NX1 “Future Warfare” — with a nod to Modern Warfare 3 (2011).</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://github.com/gamedev44/SnackOpsHQLauncher/releases/latest" rel="noopener">Download Launcher</a>
+        <a class="btn btn-ghost" href="https://github.com/gamedev44/Snack-Ops" rel="noopener"><img src="assets/img/github-purple.png" alt="" aria-hidden="true" />View source</a>
+        <a class="btn btn-ghost" href="updates.html">Dev updates</a>
+      </div>
+      <p class="disclaimer">Unofficial fan project. Not affiliated with, endorsed by, or sponsored by Activision, Treyarch, or any Call of Duty rights holder. Black Ops 2, NX1, and Modern Warfare are referenced for inspiration only.</p>
+    </div>
+    <a class="scroll-cue" href="#lineage">Scroll</a>
+  </section>
 
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x040506, 0.035);
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span class="hot">Snack Ops 2</span><span>Fan-made</span><span>Black Ops 2 inspired</span><span class="hot">NX1 Future Warfare</span><span>Modern Warfare 3 (2011)</span><span>Unreal Engine 5.8</span><span class="hot">Snack Ops 2</span><span>Fan-made</span><span>Black Ops 2 inspired</span><span class="hot">NX1 Future Warfare</span><span>Modern Warfare 3 (2011)</span><span>Unreal Engine 5.8</span>
+    </div>
+  </div>
 
-    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 120);
-    camera.position.set(0, 4.5, 11);
+  <!-- ===== Lineage ===== -->
+  <section id="lineage">
+    <div class="wrap">
+      <p class="eyebrow reveal">Lineage</p>
+      <h2 class="reveal">Three roots. One fan-made fight.</h2>
+      <p class="section-lead reveal">Snack Ops 2 pulls its feel from a handful of games that shaped a generation of arena shooters, mixed into one SDK you can open, read, and build on.</p>
+      <div class="lineage-grid">
+        <article class="lineage-card reveal">
+          <span class="num">01</span>
+          <h3>Black Ops 2</h3>
+          <p>The backbone: tight tactical gunplay, a readable HUD, and the stage-driven training rhythm that shapes how the SDK's zones and modes work.</p>
+        </article>
+        <article class="lineage-card reveal">
+          <span class="num">02</span>
+          <h3>NX1 · Future Warfare</h3>
+          <p>The canceled Call of Duty that never shipped. Its futuristic direction informs the ballistics, the weapon sci-fi tone, and the "what if" spirit of the project.</p>
+        </article>
+        <article class="lineage-card reveal">
+          <span class="num">03</span>
+          <h3>Modern Warfare 3 · OG 2011</h3>
+          <p>Small inspirational touches: the classic feel of a 2011 campaign-era shooter, carried into the death quotes, the kill feedback, and the menu energy.</p>
+        </article>
+      </div>
+    </div>
+  </section>
 
-    const light = new THREE.DirectionalLight(0xe07126, 1.05);
-    const lightBlue = new THREE.DirectionalLight(0x1c6fd4, 0.55);
-    lightBlue.position.set(-6, 4, 2);
-    scene.add(lightBlue);
-    light.position.set(5, 8, 6);
-    scene.add(light);
-    scene.add(new THREE.AmbientLight(0x223344, 0.5));
+  <!-- ===== Download ===== -->
+  <section id="download">
+    <div class="wrap">
+      <p class="eyebrow reveal">Get the game</p>
+      <h2 class="reveal">Launcher, source, and tools.</h2>
+      <p class="section-lead reveal">Play the test builds through the launcher, or clone the full SDK and open it in Unreal Engine 5.8 yourself.</p>
+      <div class="download-grid">
+        <article class="dl-card featured reveal">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fbf236" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16"/></svg>
+          </div>
+          <h3>Snack Ops HQ Launcher</h3>
+          <p>Electron launcher for play/test builds, DEVELOP mode (clone with Git LFS, open in Unreal), standard mod packs, and bundled UGC with an in-app Gun Import Guide.</p>
+          <div class="actions">
+            <a class="btn btn-primary" href="https://github.com/gamedev44/SnackOpsHQLauncher/releases/latest" rel="noopener">Download</a>
+            <a class="btn btn-ghost" href="https://github.com/gamedev44/SnackOpsHQLauncher" rel="noopener">Launcher repo</a>
+          </div>
+        </article>
 
-    const gridGeo = new THREE.PlaneGeometry(40, 40, 48, 48);
-    const gridMat = new THREE.MeshBasicMaterial({
-      color: 0xfbf236,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.12
-    });
-    const grid = new THREE.Mesh(gridGeo, gridMat);
-    grid.rotation.x = -Math.PI / 2;
-    grid.position.y = -1.2;
-    scene.add(grid);
+        <article class="dl-card reveal">
+          <div class="icon" aria-hidden="true"><img src="assets/img/github-purple.png" alt="" /></div>
+          <h3>SDK Source Code</h3>
+          <p>The full Unreal Engine 5.8 project, source, configs, and the web export tools. Use Git LFS to pull binary assets.</p>
+          <code>git lfs install &amp;&amp; git clone https://github.com/gamedev44/Snack-Ops.git</code>
+          <div class="actions">
+            <a class="btn btn-ghost" href="https://github.com/gamedev44/Snack-Ops" rel="noopener"><img src="assets/img/github-purple.png" alt="" aria-hidden="true" />GitHub source</a>
+          </div>
+        </article>
 
-    const icoGeo = new THREE.IcosahedronGeometry(1.8, 1);
-    const icoMat = new THREE.MeshStandardMaterial({
-      color: 0x1a1f24,
-      metalness: 0.85,
-      roughness: 0.35,
-      emissive: 0xac3232,
-      emissiveIntensity: 0.08,
-      wireframe: true
-    });
-    const ico = new THREE.Mesh(icoGeo, icoMat);
-    ico.position.set(-3, 2.2, -2);
-    scene.add(ico);
+        <article class="dl-card reveal">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#e07126" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></svg>
+          </div>
+          <h3>Editor Launcher (.bat)</h3>
+          <p>One-click Unreal Editor launcher for Windows: normal launch, live logging, cache cleaning, and a path-verification utility.</p>
+          <div class="actions">
+            <a class="btn btn-ghost" href="https://raw.githubusercontent.com/gamedev44/Snack-Ops/main/SnackOps_Launcher.bat" download>Download .bat</a>
+            <a class="btn btn-ghost" href="https://github.com/gamedev44/Snack-Ops/blob/main/LauncherREADME.txt" rel="noopener">README</a>
+          </div>
+        </article>
 
-    const particles = 400;
-    const pos = new Float32Array(particles * 3);
-    for (let i = 0; i < particles; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 30;
-      pos[i * 3 + 1] = Math.random() * 12;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 30;
-    }
-    const pGeo = new THREE.BufferGeometry();
-    pGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    const pMat = new THREE.PointsMaterial({
-      color: 0xe07126,
-      size: 0.06,
-      transparent: true,
-      opacity: 0.55,
-      depthWrite: false
-    });
-    const points = new THREE.Points(pGeo, pMat);
-    scene.add(points);
+        <article class="dl-card reveal">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#1c6fd4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4zM3 12l9 4 9-4M3 17l9 4 9-4"/></svg>
+          </div>
+          <h3>Map Pack Install</h3>
+          <p>Step-by-step guide to installing the community map packs into the SDK, with the web install tool included in the repo.</p>
+          <div class="actions">
+            <a class="btn btn-ghost" href="Docs/tools/map-pack-install.html">Install guide</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
 
-    let mx = 0, my = 0;
-    window.addEventListener("pointermove", (e) => {
-      mx = (e.clientX / window.innerWidth - 0.5) * 2;
-      my = (e.clientY / window.innerHeight - 0.5) * 2;
-    });
+  <!-- ===== Features ===== -->
+  <section id="features">
+    <div class="wrap">
+      <p class="eyebrow reveal">Under the hood</p>
+      <h2 class="reveal">Built for the feel.</h2>
+      <p class="section-lead reveal">Recent systems work across gunplay, movement, AI, and the HUD, tuned on Unreal Engine 5.8.</p>
+      <div class="features">
+        <div class="feature reveal"><h4>Unified TP / FP camera</h4><p>Third- and first-person share one camera system with dynamic lag and clean mesh visibility splits.</p></div>
+        <div class="feature reveal"><h4>Procedural ladders</h4><p>Overhauled ladder system with tuned climb and detach behavior on BP_Ladder.</p></div>
+        <div class="feature reveal"><h4>Stage zones</h4><p>Labeled training zones for target practice and course legs, each with its own rules and messages.</p></div>
+        <div class="feature reveal"><h4>Ballistics meshes</h4><p>Millimeter-accurate bullet meshes for tracers and projectiles, sized to real calibers.</p></div>
+        <div class="feature reveal"><h4>Death quotes HUD</h4><p>A war-themed death-message array driving the HUD, editable through a simple paste workflow.</p></div>
+        <div class="feature reveal"><h4>Navigation core</h4><p>AI pathfinding and CMC navigation improvements, plus a ~30% physics cost reduction on UE 5.8.</p></div>
+      </div>
+    </div>
+  </section>
 
-    const clock = new THREE.Clock();
-    function animate() {
-      requestAnimationFrame(animate);
-      const t = clock.getElapsedTime();
-      if (!prefersReduced) {
-        grid.rotation.z = t * 0.02;
-        ico.rotation.x = t * 0.15;
-        ico.rotation.y = t * 0.22;
-        camera.position.x += (mx * 1.2 - camera.position.x) * 0.02;
-        camera.position.y += (4.5 - my * 0.8 - camera.position.y) * 0.02;
-        camera.lookAt(0, 0.5, 0);
+  <!-- ===== Arsenal ===== -->
+  <section id="arsenal">
+    <div class="wrap">
+      <p class="eyebrow reveal">Arsenal</p>
+      <h2 class="reveal">Seven weapons in the current build.</h2>
+      <p class="section-lead reveal">Fictional, licensing-safe names. Tap a weapon to see its full overhaul breakdown in the dev updates.</p>
+      <div class="arsenal">
+        <a class="gun reveal" href="updates.html#weapon-ak47"><div class="name">AK-47</div><div class="rep">Kalashnikov 7.62×39 mm</div><div class="tagline-g">Full import · 11 presets</div></a>
+        <a class="gun reveal" href="updates.html#weapon-uzx"><div class="name">UZX</div><div class="rep">Uzi-family SMG</div><div class="tagline-g">Full overhaul · 8 presets</div></a>
+        <a class="gun reveal" href="updates.html#weapon-blk18"><div class="name">BLK-18</div><div class="rep">Glock 18 · 9×19 mm</div><div class="tagline-g">Full overhaul · 12 presets</div></a>
+        <a class="gun reveal" href="updates.html#weapon-m4a1"><div class="name">M4A1</div><div class="rep">Colt M4 carbine · 5.56×45 mm</div><div class="tagline-g">Full overhaul · 26 presets</div></a>
+        <a class="gun reveal" href="updates.html#weapon-falcon"><div class="name">Falcon</div><div class="rep">Desert Eagle · .50 AE</div><div class="tagline-g">Animation pass</div></a>
+        <a class="gun reveal" href="updates.html#weapon-tsr9"><div class="name">TSR-9</div><div class="rep">UMP-style 9×19 mm SMG</div><div class="tagline-g">Stock platform</div></a>
+        <a class="gun reveal" href="updates.html#weapon-fists"><div class="name">Fists</div><div class="rep">Unarmed melee</div><div class="tagline-g">New melee system</div></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Gallery ===== -->
+  <section id="gallery">
+    <div class="wrap">
+      <p class="eyebrow reveal">Field gallery</p>
+      <h2 class="reveal">Textures from the repo.</h2>
+      <p class="section-lead reveal">Camo, reticle, and HUD assets pulled straight from the project's exported texture library.</p>
+      <div class="gallery">
+        <figure class="reveal"><img src="assets/img/gallery/camo-camouflage.png" alt="Camouflage camo texture" /><figcaption>Camo · Camouflage</figcaption></figure>
+        <figure class="reveal"><img src="assets/img/gallery/camo-digital.png" alt="Digital camo texture" /><figcaption>Camo · Digital</figcaption></figure>
+        <figure class="reveal"><img src="assets/img/gallery/reticle-crosshorizon.png" alt="Cross horizon reticle" /><figcaption>Reticle · Cross</figcaption></figure>
+        <figure class="reveal"><img src="assets/img/gallery/reticle-alien.png" alt="Alien reticle" /><figcaption>Reticle · Alien</figcaption></figure>
+        <figure class="reveal"><img src="assets/img/gallery/sniper-mildot.png" alt="Sniper mil-dot scope" /><figcaption>Scope · Mil-dot</figcaption></figure>
+        <figure class="reveal"><img src="assets/img/gallery/hitmarker.png" alt="Hitmarker icon" /><figcaption>HUD · Hitmarker</figcaption></figure>
+        <figure class="reveal"><img src="assets/img/gallery/icon-explosion.png" alt="Explosion HUD icon" /><figcaption>HUD · Explosion</figcaption></figure>
+        <figure class="reveal"><img src="assets/img/gallery/fpsk-logo-basecolor.png" alt="FPSK logo" /><figcaption>Logo · FPSK</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Updates teaser ===== -->
+  <section id="updates">
+    <div class="wrap">
+      <div class="updates-box reveal">
+        <div>
+          <p class="eyebrow">Dev log · October 2026</p>
+          <h2>What's new this week.</h2>
+          <p class="section-lead">Full changelog, weapon breakdowns, known issues, and the coming-next roadmap live on the dev updates page.</p>
+          <div class="cta-row" style="margin-top:1.6rem">
+            <a class="btn btn-primary" href="updates.html">Open dev updates</a>
+          </div>
+        </div>
+        <ul>
+          <li>Snack Ops HQ Launcher with bundled UGC and Gun Import Guide</li>
+          <li>Death quotes moved into the HUD array (15 lines)</li>
+          <li>Procedural ladders and stage zones for training modes</li>
+          <li>Millimeter-accurate ballistics meshes</li>
+          <li>Known issue: TSR-9 stock icon bleeds into melee</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+  </main>
+
+  <!-- ===== Footer ===== -->
+  <footer class="site">
+    <div class="wrap">
+      <div class="foot-grid">
+        <div>
+          <img src="https://i.ibb.co/b56PstjP/image-2026-10-19-235909691.png" alt="Snack Ops II SDK" onerror="this.onerror=null;this.src='Docs/branding/SnackOps_SDK_Logo.png'" />
+        </div>
+        <nav class="foot-links" aria-label="Footer">
+          <a href="updates.html">Dev updates</a>
+          <a href="https://github.com/gamedev44/SnackOpsHQLauncher" rel="noopener">Launcher</a>
+          <a href="https://github.com/gamedev44/Snack-Ops" rel="noopener">SDK source</a>
+          <a href="Docs/tools/map-pack-install.html">Map packs</a>
+          <a href="#home">Back to top</a>
+        </nav>
+      </div>
+      <p class="fine">Snack Ops 2 is a fan-made creation based on and heavily inspired by Black Ops 2 and NX1 (Future Warfare), a canceled Call of Duty, with small inspirational features from Modern Warfare 3 (OG, 2011). It is not affiliated with, endorsed by, or sponsored by Activision, Treyarch, Infinity Ward, or any Call of Duty rights holder. All trademarks belong to their respective owners.</p>
+    </div>
+  </footer>
+
+  <script>
+    // ---------- Intro loader ----------
+    (function () {
+      const intro = document.getElementById("intro");
+      const video = document.getElementById("intro-video");
+      const skipBtn = document.getElementById("intro-skip");
+      const soundBtn = document.getElementById("intro-sound");
+      let closed = false;
+
+      function closeIntro() {
+        if (closed) return;
+        closed = true;
+        video.pause();
+        intro.classList.add("done");
+        document.body.style.overflow = "";
+        setTimeout(() => intro.remove(), 1000);
       }
-      renderer.render(scene, camera);
-    }
-    animate();
 
-    window.addEventListener("resize", () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+      document.body.style.overflow = "hidden";
 
-    const blocks = document.querySelectorAll("section.block");
-    const navLinks = document.querySelectorAll("#nav-links a");
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((en) => {
-          if (en.isIntersecting) en.target.classList.add("visible");
-        });
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
-    );
-    blocks.forEach((b) => io.observe(b));
+      // Try with sound first; fall back to muted autoplay (browsers block unmuted autoplay)
+      video.muted = false;
+      video.play().then(() => {
+        soundBtn.textContent = "Mute";
+      }).catch(() => {
+        video.muted = true;
+        soundBtn.textContent = "Sound on";
+        video.play().catch(() => {});
+      });
 
-    const sectionIo = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((en) => {
-          if (!en.isIntersecting) return;
-          const id = en.target.id;
-          navLinks.forEach((a) => {
-            a.classList.toggle("active", a.getAttribute("href") === "#" + id);
-          });
-        });
-      },
-      { threshold: 0.35 }
-    );
-    document.querySelectorAll("section.block[id], header.hero[id]").forEach((el) => sectionIo.observe(el));
+      soundBtn.addEventListener("click", () => {
+        video.muted = !video.muted;
+        soundBtn.textContent = video.muted ? "Sound on" : "Mute";
+        if (video.paused) video.play().catch(() => {});
+      });
 
-    const progress = document.getElementById("progress");
-    window.addEventListener("scroll", () => {
-      const h = document.documentElement.scrollHeight - window.innerHeight;
-      progress.style.width = h > 0 ? (window.scrollY / h) * 100 + "%" : "0%";
+      skipBtn.addEventListener("click", closeIntro);
+      video.addEventListener("ended", closeIntro);
+      video.addEventListener("error", closeIntro);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" || e.key === "Enter" || e.key === " ") closeIntro();
+      });
+      // Failsafe: never trap the visitor behind the loader
+      setTimeout(closeIntro, 20000);
+    })();
+
+    // ---------- Header on scroll ----------
+    const header = document.getElementById("top");
+    const onScroll = () => header.classList.toggle("scrolled", window.scrollY > 40);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    // ---------- Reveal on scroll ----------
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (en.isIntersecting) {
+          en.target.classList.add("in");
+          io.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
+    document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+
+    // ---------- Reticle cursor ----------
+    const reticle = document.querySelector(".reticle");
+    window.addEventListener("pointermove", (e) => {
+      document.body.classList.add("has-pointer");
+      reticle.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
     }, { passive: true });
 
-    const avCanvas = document.getElementById("anim-viewer");
-    const animSelect = document.getElementById("anim-select");
-    const animStatus = document.getElementById("anim-status");
-    const btnPlay = document.getElementById("anim-play");
-    const btnPause = document.getElementById("anim-pause");
-
-    if (avCanvas && animSelect && animStatus) {
-      const avRenderer = new THREE.WebGLRenderer({ canvas: avCanvas, antialias: true, alpha: false });
-      const avScene = new THREE.Scene();
-      avScene.background = new THREE.Color(0x0a0c10);
-      const avCamera = new THREE.PerspectiveCamera(42, 1, 0.01, 200);
-      avCamera.position.set(0.8, 1.1, 2.4);
-      const avControls = new OrbitControls(avCamera, avCanvas);
-      avControls.enableDamping = true;
-      avControls.target.set(0, 0.9, 0);
-      avScene.add(new THREE.HemisphereLight(0xffffff, 0x222833, 1.15));
-      const key = new THREE.DirectionalLight(0xfbf236, 0.85);
-      key.position.set(3, 5, 2);
-      avScene.add(key);
-
-      const loader = new GLTFLoader();
-      const avClock = new THREE.Clock();
-      let mixer = null;
-      let activeRoot = null;
-      let clips = [];
-
-      function resizeAv() {
-        const w = avCanvas.clientWidth || 640;
-        const h = avCanvas.clientHeight || 360;
-        avRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        avRenderer.setSize(w, h, false);
-        avCamera.aspect = w / h;
-        avCamera.updateProjectionMatrix();
+    // ---------- Ember / particle field ----------
+    (function () {
+      const c = document.getElementById("fx");
+      const ctx = c.getContext("2d");
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let w, h, dpr, parts = [];
+      function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        w = c.width = innerWidth * dpr;
+        h = c.height = innerHeight * dpr;
+        c.style.width = innerWidth + "px";
+        c.style.height = innerHeight + "px";
+        const n = Math.round((innerWidth * innerHeight) / 16000);
+        parts = Array.from({ length: n }, () => spawn(true));
       }
-      resizeAv();
-      window.addEventListener("resize", resizeAv);
-
-      function disposeObject(root) {
-        root.traverse((obj) => {
-          if (obj.geometry) obj.geometry.dispose();
-          if (obj.material) {
-            const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-            mats.forEach((m) => m.dispose && m.dispose());
-          }
-        });
+      function spawn(initial) {
+        return {
+          x: Math.random() * w,
+          y: initial ? Math.random() * h : h + 10,
+          r: (Math.random() * 1.6 + 0.4) * dpr,
+          vy: -(Math.random() * 0.45 + 0.15) * dpr,
+          vx: (Math.random() - 0.5) * 0.15 * dpr,
+          a: Math.random() * 0.6 + 0.2,
+          warm: Math.random() < 0.6
+        };
       }
-
-      function clearModel() {
-        if (mixer) {
-          mixer.stopAllAction();
-          mixer = null;
+      function frame() {
+        ctx.clearRect(0, 0, w, h);
+        for (let i = 0; i < parts.length; i++) {
+          const p = parts[i];
+          p.x += p.vx; p.y += p.vy;
+          if (p.y < -10) parts[i] = spawn(false);
+          ctx.beginPath();
+          ctx.fillStyle = p.warm ? `rgba(224,113,38,${p.a})` : `rgba(251,242,54,${p.a * 0.7})`;
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
         }
-        if (activeRoot) {
-          avScene.remove(activeRoot);
-          disposeObject(activeRoot);
-          activeRoot = null;
-        }
+        if (!reduce) requestAnimationFrame(frame);
       }
-
-      async function loadClip(entry) {
-        clearModel();
-        animStatus.textContent = "Loading " + entry.label + "…";
-        try {
-          const gltf = await loader.loadAsync(entry.file);
-          activeRoot = gltf.scene;
-          avScene.add(activeRoot);
-          const box = new THREE.Box3().setFromObject(activeRoot);
-          const center = box.getCenter(new THREE.Vector3());
-          const size = box.getSize(new THREE.Vector3());
-          activeRoot.position.sub(center);
-          activeRoot.position.y += size.y * 0.5;
-          const maxDim = Math.max(size.x, size.y, size.z, 0.01);
-          avCamera.position.set(maxDim * 0.6, maxDim * 0.55, maxDim * 1.6);
-          avControls.target.set(0, size.y * 0.45, 0);
-          avControls.update();
-          if (gltf.animations && gltf.animations.length) {
-            mixer = new THREE.AnimationMixer(activeRoot);
-            gltf.animations.forEach((clip) => {
-              mixer.clipAction(clip).reset().play();
-            });
-            animStatus.textContent = entry.label + " — " + gltf.animations.length + " animation(s). Drag to orbit.";
-          } else {
-            animStatus.textContent = entry.label + " — mesh loaded (no animation tracks in GLB).";
-          }
-        } catch (err) {
-          animStatus.textContent = "Load failed: " + entry.file + " (" + (err.message || err) + ")";
-        }
-      }
-
-      btnPlay?.addEventListener("click", () => {
-        if (mixer) mixer.timeScale = 1;
-      });
-      btnPause?.addEventListener("click", () => {
-        if (mixer) mixer.timeScale = 0;
-      });
-      animSelect.addEventListener("change", () => {
-        const i = Number(animSelect.value);
-        if (clips[i]) loadClip(clips[i]);
-      });
-
-      try {
-        const res = await fetch("Docs/animations/manifest.json");
-        const data = await res.json();
-        clips = Array.isArray(data.clips) ? data.clips : [];
-        animSelect.innerHTML = "";
-        if (!clips.length) {
-          const opt = document.createElement("option");
-          opt.textContent = "No GLB exports yet";
-          animSelect.appendChild(opt);
-          animStatus.textContent = "Export .glb to Docs/animations/ then add entries to manifest.json. Open via http://localhost (file:// blocks fetch).";
-        } else {
-          clips.forEach((c, i) => {
-            const opt = document.createElement("option");
-            opt.value = String(i);
-            opt.textContent = c.label || c.file;
-            animSelect.appendChild(opt);
-          });
-          await loadClip(clips[0]);
-        }
-      } catch {
-        animStatus.textContent = "Manifest not loaded — serve UPDATES.html over http://localhost (e.g. python -m http.server) after exporting GLBs.";
-      }
-
-      function tickAv() {
-        requestAnimationFrame(tickAv);
-        const dt = avClock.getDelta();
-        if (mixer && mixer.timeScale > 0) mixer.update(dt);
-        avControls.update();
-        avRenderer.render(avScene, avCamera);
-      }
-      tickAv();
-
-      window.__loadAnimClip = async (entry) => {
-        clips = [entry];
-        animSelect.innerHTML = "";
-        const opt = document.createElement("option");
-        opt.value = "0";
-        opt.textContent = entry.label || entry.file;
-        animSelect.appendChild(opt);
-        await loadClip(entry);
-        document.getElementById("anim-preview")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      };
-    }
-
-    const catalogStatus = document.getElementById("catalog-status");
-    const catalogPlatform = document.getElementById("catalog-platform");
-    const catalogTextures = document.getElementById("catalog-textures");
-    const catalogPresets = document.getElementById("catalog-presets");
-    const catalogSkm = document.getElementById("catalog-skm");
-    const catalogSm = document.getElementById("catalog-sm");
-    const catalogAnims = document.getElementById("catalog-anims");
-    const catalogRefresh = document.getElementById("catalog-refresh");
-
-    let browseData = null;
-    let textureHideSubstrings = ["/Textures/Ammo/", "/Textures/AmmoCrates/"];
-
-    function textureIsHidden(file) {
-      if (!file) return false;
-      return textureHideSubstrings.some((s) => file.includes(s));
-    }
-
-    function fillList(el, items, emptyMsg) {
-      if (!el) return;
-      el.innerHTML = "";
-      if (!items || !items.length) {
-        const li = document.createElement("li");
-        li.textContent = emptyMsg;
-        el.appendChild(li);
-        return;
-      }
-      items.forEach((name) => {
-        const li = document.createElement("li");
-        li.textContent = name;
-        el.appendChild(li);
-      });
-    }
-
-    function meshExportFor(platform, meshName) {
-      if (!browseData?.exported_meshes) return null;
-      return browseData.exported_meshes.find(
-        (m) => m.platform === platform && m.name === meshName.replace(".uasset", "")
-      );
-    }
-
-    function renderCatalogPlatform(key) {
-      if (!browseData || !key) return;
-      const zone = browseData.zones?.[key];
-      const plat = browseData.platforms?.[key];
-      const rep = plat?.represents ? " — " + plat.represents : "";
-      if (zone) {
-        catalogStatus.textContent =
-          key + rep + " · on disk: " + (zone.textures || 0) + " PNG, " + (zone.meshes || 0) + " mesh, " + (zone.animations || 0) + " anim";
-      } else if (!plat) return;
-      else {
-        catalogStatus.textContent = key + rep + " · names from asset catalog (no exports in this bucket yet)";
-      }
-
-      fillList(catalogPresets, plat?.presets, "—");
-      catalogSkm.innerHTML = "";
-      (plat?.skeletal_meshes || []).forEach((raw) => {
-        const name = raw.replace(".uasset", "");
-        const li = document.createElement("li");
-        const exp = meshExportFor(key, name);
-        if (exp && typeof window.__loadAnimClip === "function" && exp.file.toLowerCase().endsWith(".glb")) {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "linkish";
-          btn.textContent = name + " (preview GLB)";
-          btn.addEventListener("click", () => window.__loadAnimClip({ label: key + " — " + name, file: exp.file }));
-          li.appendChild(btn);
-        } else {
-          li.textContent = name + (exp ? " · " + exp.file.split("/").pop() : "");
-        }
-        catalogSkm.appendChild(li);
-      });
-      fillList(catalogSm, (plat?.static_meshes || []).map((s) => s.replace(".uasset", "")), "—");
-      fillList(catalogAnims, plat?.animations, "—");
-      if (!plat && zone) {
-        const meshNames = (browseData.exported_meshes || []).filter((m) => (m.platform || m.bucket) === key).map((m) => m.name);
-        const animNames = (browseData.exported_animations || []).filter((m) => (m.platform || m.bucket) === key).map((m) => m.name);
-        if (meshNames.length) fillList(catalogSkm, meshNames, "—");
-        if (animNames.length) fillList(catalogAnims, animNames, "—");
-      }
-
-      catalogTextures.innerHTML = "";
-      const texExports = (browseData.exported_textures || []).filter((t) => {
-        if (textureIsHidden(t.file)) return false;
-        const b = t.platform || t.zone || t.bucket;
-        if (b === key) return true;
-        return key === "Textures" && t.file.includes("/FPSK/Textures/");
-      }).slice(0, 36);
-      if (key === "Textures" && textureHideSubstrings.length) {
-        const note = document.createElement("p");
-        note.className = "catalog-meta";
-        note.textContent =
-          "Cartridge / ammo crate PNGs hidden: web export is from Content .uasset (Oct 16), not your edit folder at C:\\Snack Ops\\snack ops 2 textures to edit — 45ACP, 9mm, 50AE, 50BMG differ until re-import. 556 / 762 / ShellCase match your edits.";
-        catalogTextures.appendChild(note);
-      }
-      if (!texExports.length) {
-        const p = document.createElement("p");
-        p.className = "catalog-meta";
-        p.textContent = "No PNG previews for this bucket (hidden, or not exported yet).";
-        catalogTextures.appendChild(p);
-      } else {
-        texExports.forEach((t) => {
-          const img = document.createElement("img");
-          img.src = t.file;
-          img.alt = t.name;
-          img.loading = "lazy";
-          img.title = t.name;
-          catalogTextures.appendChild(img);
-        });
-      }
-    }
-
-    async function loadBrowseManifest() {
-      if (!catalogStatus) return;
-      catalogStatus.textContent = "Loading browse manifest…";
-      try {
-        const [res, filtRes] = await Promise.all([
-          fetch("Docs/web_export/browse_manifest.json"),
-          fetch("Docs/web_export/display_filters.json"),
-        ]);
-        browseData = await res.json();
-        if (filtRes.ok) {
-          const filt = await filtRes.json();
-          if (Array.isArray(filt.hide_texture_path_contains)) {
-            textureHideSubstrings = filt.hide_texture_path_contains;
-          }
-        }
-        const keys = Object.keys(browseData.zones || browseData.platforms || {}).sort();
-        catalogPlatform.innerHTML = "";
-        keys.forEach((k) => {
-          const opt = document.createElement("option");
-          opt.value = k;
-          opt.textContent = k;
-          catalogPlatform.appendChild(opt);
-        });
-        if (keys.length) {
-          renderCatalogPlatform(keys[0]);
-        } else {
-          catalogStatus.textContent = "No platforms in manifest — run Saved/_asset_catalog.py then sync_web_manifest.py.";
-        }
-      } catch {
-        catalogStatus.textContent = "Could not load browse manifest — serve over http://localhost and run python Scripts/sync_web_manifest.py.";
-      }
-    }
-
-    catalogPlatform?.addEventListener("change", () => renderCatalogPlatform(catalogPlatform.value));
-    catalogRefresh?.addEventListener("click", loadBrowseManifest);
-    loadBrowseManifest();
+      resize();
+      frame();
+      window.addEventListener("resize", resize);
+    })();
   </script>
 </body>
 </html>
