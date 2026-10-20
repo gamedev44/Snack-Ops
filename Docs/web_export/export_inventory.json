@@ -1,0 +1,89 @@
+{
+  "totals": {
+    "textures_ok": 431,
+    "meshes_ok": 151,
+    "anims_ok": 529
+  },
+  "by_bucket": {
+    "Characters": {
+      "textures": 29,
+      "meshes": 22,
+      "animations": 0
+    },
+    "ExternalAssets": {
+      "textures": 13,
+      "meshes": 0,
+      "animations": 272
+    },
+    "Falcon": {
+      "textures": 7,
+      "meshes": 2,
+      "animations": 31
+    },
+    "Fists": {
+      "textures": 1,
+      "meshes": 1,
+      "animations": 23
+    },
+    "M4A1": {
+      "textures": 1,
+      "meshes": 8,
+      "animations": 30
+    },
+    "TSR9": {
+      "textures": 6,
+      "meshes": 7,
+      "animations": 35
+    },
+    "MetaHumans": {
+      "textures": 64,
+      "meshes": 5,
+      "animations": 46
+    },
+    "MetaHumans_OPT_High": {
+      "textures": 74,
+      "meshes": 10,
+      "animations": 1
+    },
+    "Textures": {
+      "textures": 234,
+      "meshes": 0,
+      "animations": 0
+    },
+    "Splash": {
+      "textures": 2,
+      "meshes": 0,
+      "animations": 0
+    },
+    "FirstPersonAssets": {
+      "textures": 0,
+      "meshes": 1,
+      "animations": 0
+    },
+    "AK47": {
+      "textures": 0,
+      "meshes": 18,
+      "animations": 0
+    },
+    "BLK18": {
+      "textures": 0,
+      "meshes": 10,
+      "animations": 0
+    },
+    "UZX": {
+      "textures": 0,
+      "meshes": 10,
+      "animations": 0
+    },
+    "Meshes": {
+      "textures": 0,
+      "meshes": 57,
+      "animations": 0
+    },
+    "Animations": {
+      "textures": 0,
+      "meshes": 0,
+      "animations": 91
+    }
+  }
+}

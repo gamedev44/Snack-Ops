@@ -1,0 +1,7 @@
+{
+  "hide_texture_path_contains": [
+    "/Textures/Ammo/",
+    "/Textures/AmmoCrates/"
+  ],
+  "note": "Catalog PNGs come from Content .uasset (UE export), not from C:\\Snack Ops\\snack ops 2 textures to edit. 45ACP / 9mm / 50AE (and related maps) in the project differ from your Sept edit PNGs until re-import. 556, 762, ShellCase match your edit folder."
+}
