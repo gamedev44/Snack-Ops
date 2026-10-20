@@ -25,7 +25,8 @@ Snack Ops v2 Windows/
 *.xz
 *.pak
 
-# Build/ is intentionally tracked
+# Build/ is intentionally tracked (omit local open-order logs)
+Build/Windows/FileOpenOrder/*.log
 
 # Visual Studio / Rider / VS Code
 .vs/

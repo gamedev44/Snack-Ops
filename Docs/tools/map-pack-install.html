@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>Snack Ops — Map pack install (browser)</title>
+  <style>
+    :root {
+      --bg: #040506;
+      --surface: rgba(8, 10, 14, 0.92);
+      --border: rgba(251, 242, 54, 0.16);
+      --text: #ece8e4;
+      --muted: #9a9590;
+      --accent: #fbf236;
+      --accent-warm: #e07126;
+      --danger: #ff5c5c;
+      --ok: #3dd68c;
+      --mono: "Segoe UI", system-ui, sans-serif;
+      --radius: 14px;
+    }
+    body {
+      margin: 0;
+      font-family: var(--mono);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      padding: 2rem 1.25rem 3rem;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; }
+    h1 { font-size: 1.35rem; color: var(--accent-warm); margin: 0 0 0.5rem; }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin: 1rem 0;
+    }
+    .warn { color: var(--muted); font-size: 0.9rem; margin: 0 0 1rem; }
+    label { display: block; font-size: 0.85rem; margin-bottom: 0.35rem; color: var(--muted); }
+    button, .btn {
+      font-family: inherit;
+      font-size: 0.9rem;
+      padding: 0.55rem 0.85rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.45);
+      color: var(--accent);
+      cursor: pointer;
+      margin: 0.25rem 0.25rem 0.25rem 0;
+    }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.primary { border-color: var(--accent-warm); }
+    #status { margin-top: 1rem; font-size: 0.88rem; white-space: pre-wrap; }
+    #status.err { color: var(--danger); }
+    #status.ok { color: var(--ok); }
+    a { color: #1c6fd4; }
+    input[type=file] { font-size: 0.85rem; margin-bottom: 0.75rem; }
+    .path { font-size: 0.82rem; color: var(--muted); word-break: break-all; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p><a href="../../index.html">← Dev updates</a></p>
+    <h1>Map pack installer (browser)</h1>
+    <p class="warn" id="disclaimer">
+      Standard Snack Ops SDK only: you choose the project <strong>Content</strong> folder;
+      we require <code>Content/FPSK/Maps</code>.
+      Edited, forked, or heavily restructured variants may not work. Overwrites under FPSK/Maps.
+      <strong>Use at your own risk.</strong>
+    </p>
+
+    <div class="panel" id="unsupported" hidden>
+      <p>This browser cannot write into a folder directly. Use
+        <strong>Chrome or Edge</strong> over HTTPS or localhost, or run the desktop tool:</p>
+      <p><code>python Scripts/snackops_map_pack_installer.py</code></p>
+    </div>
+
+    <div class="panel" id="main-ui">
+      <label>1. Map pack (.zip) from the download page</label>
+      <input type="file" id="zip-input" accept=".zip,application/zip" />
+
+      <label>2. Snack Ops project Content folder</label>
+      <button type="button" id="pick-content" class="primary">Choose Content folder…</button>
+      <p class="path" id="content-label">No folder selected yet.</p>
+
+      <button type="button" id="install-btn" class="primary" disabled>Install into FPSK/Maps</button>
+    </div>
+
+    <div id="status" role="status"></div>
+  </div>
+
+  <script type="module">
+    import { unzipSync } from "https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/browser.js";
+
+    const DISCLAIMER =
+      "Edited or heavily restructured project variants will not work with this tool. Use at your own risk.";
+
+    const zipInput = document.getElementById("zip-input");
+    const pickContent = document.getElementById("pick-content");
+    const installBtn = document.getElementById("install-btn");
+    const contentLabel = document.getElementById("content-label");
+    const statusEl = document.getElementById("status");
+    const unsupported = document.getElementById("unsupported");
+    const mainUi = document.getElementById("main-ui");
+
+    let contentDirHandle = null;
+    let zipBytes = null;
+
+    const fsApi = "showDirectoryPicker" in window;
+    if (!fsApi) {
+      unsupported.hidden = false;
+      mainUi.querySelectorAll("button").forEach((b) => (b.disabled = true));
+    }
+
+    function setStatus(msg, kind = "") {
+      statusEl.textContent = msg;
+      statusEl.className = kind ? kind : "";
+    }
+
+    function normalizeZipMember(name) {
+      const n = name.replace(/\\/g, "/").replace(/^\/+/, "");
+      if (!n || n.endsWith("/")) return null;
+      const parts = n.split("/");
+      const low = parts.map((p) => p.toLowerCase());
+      if (low.length >= 2 && low[0] === "content" && low[1] === "fpsk") {
+        return parts.slice(2).join("/");
+      }
+      if (low[0] === "fpsk") return parts.slice(1).join("/");
+      return null;
+    }
+
+    async function validateContentDir(dirHandle) {
+      try {
+        const fpsk = await dirHandle.getDirectoryHandle("FPSK");
+        await fpsk.getDirectoryHandle("Maps");
+        return { ok: true, fpsk };
+      } catch {
+        try {
+          await dirHandle.getDirectoryHandle("FPSK");
+        } catch {
+          return {
+            ok: false,
+            message:
+              "Snack Ops project not configured correctly.\n\nMissing: Content/FPSK\n\n" + DISCLAIMER,
+          };
+        }
+        return {
+          ok: false,
+          message:
+            "Maps folder not found.\n\nExpected: Content/FPSK/Maps\n\nSnack Ops project not configured correctly.\n\n" +
+            DISCLAIMER,
+        };
+      }
+    }
+
+    async function writeFileUnder(fpskHandle, relativePath, data) {
+      const parts = relativePath.split("/").filter(Boolean);
+      const fileName = parts.pop();
+      let dir = fpskHandle;
+      for (const p of parts) {
+        dir = await dir.getDirectoryHandle(p, { create: true });
+      }
+      const fh = await dir.getFileHandle(fileName, { create: true });
+      const w = await fh.createWritable();
+      await w.write(data);
+      await w.close();
+    }
+
+    function updateInstallEnabled() {
+      installBtn.disabled = !(contentDirHandle && zipBytes && fsApi);
+    }
+
+    zipInput.addEventListener("change", async () => {
+      const f = zipInput.files?.[0];
+      if (!f) return;
+      zipBytes = new Uint8Array(await f.arrayBuffer());
+      setStatus(`Zip loaded: ${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)`);
+      updateInstallEnabled();
+    });
+
+    pickContent.addEventListener("click", async () => {
+      if (!fsApi) return;
+      try {
+        contentDirHandle = await window.showDirectoryPicker({
+          mode: "readwrite",
+          id: "snackops-content",
+          startIn: "documents",
+        });
+        const v = await validateContentDir(contentDirHandle);
+        if (!v.ok) {
+          contentDirHandle = null;
+          setStatus(v.message, "err");
+          contentLabel.textContent = "Invalid Content folder.";
+          updateInstallEnabled();
+          return;
+        }
+        contentLabel.textContent = `Selected: Content/ (with FPSK/Maps) — ${contentDirHandle.name}`;
+        setStatus("Content folder OK.", "ok");
+        updateInstallEnabled();
+      } catch (e) {
+        if (e.name !== "AbortError") setStatus(String(e.message || e), "err");
+      }
+    });
+
+    installBtn.addEventListener("click", async () => {
+      if (!contentDirHandle || !zipBytes) return;
+      const v = await validateContentDir(contentDirHandle);
+      if (!v.ok) {
+        setStatus(v.message, "err");
+        return;
+      }
+      if (!confirm(`Install into this Content folder?\n\n${DISCLAIMER}\n\nContinue?`)) return;
+
+      installBtn.disabled = true;
+      setStatus("Unpacking…");
+      try {
+        const files = unzipSync(zipBytes);
+        let count = 0;
+        const fpsk = v.fpsk;
+        for (const [path, data] of Object.entries(files)) {
+          const rel = normalizeZipMember(path);
+          if (!rel) continue;
+          await writeFileUnder(fpsk, rel, data);
+          count++;
+        }
+        setStatus(`Done. Wrote ${count} file(s) under Content/FPSK/.\nOpen UE 5.8 and check Maps.`, "ok");
+      } catch (e) {
+        setStatus("Install failed: " + (e.message || e), "err");
+      } finally {
+        installBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
